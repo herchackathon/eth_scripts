@@ -1,84 +1,77 @@
-pragma solidity ^0.4.21;
+pragma solidity 0.4.25;
 
-// A contract to manage players' top scores.
-contract PlayerScore
-{
+
+/**
+ * @dev A contract to manage players' top scores
+ */
+contract PlayerScore {
     // Represents the maximum amount of
     // stored top scores.
-    uint constant m_maxScores = 5;
-    
+    uint256 private constant M_MAXSCORES = 5;
+
     // Represents the player-score entry.
-    struct Score
-    {
+    struct Score {
         address player;
-        int score;
+        uint256 score;
     }
-    
-    /// <summary>
+
     /// Most relevant scores stored in this contract.
-    /// </summary>
-    Score[] public TopScores;
-    
+    Score[] private topScores;
+
     // Maps each player with its own score.
-    mapping(address=>int) public Scores;
-    
-    /// <summary>
-    /// Sets the score for current sender.
-    /// If no score exists, a new one is created.
-    /// </summary>
-    function SetScore(int score) public
-    {
-        int currentScore = Scores[msg.sender];
-        
-        // Replace the old score with the new one
+    mapping (address => uint256) private scores;
+
+    /// Get the amount of top scores.
+    function getTopScoresCount() external view returns (uint256) {
+        return topScores.length;
+    }
+
+    /**
+     * @dev Sets the score for current sender.
+     * If no score exists, a new one is created.
+     * @param score The score to set
+     */
+    /* TODO: This function needs to be more secure, maybe internal */
+    function setScore(uint256 score) public {
+        // Replace the old score with the new one,
         // if it is higher.
-        if(currentScore < score)
-        {
-            Scores[msg.sender] = score;
+        if (score > scores[msg.sender]) {
+            scores[msg.sender] = score;
         }
-        
+
         // Now we populate the top scores array.
-        if(TopScores.length < m_maxScores)
-        {
-            // If we didn't reach yet the maximum stored
-            // scores amount, we simply add the new entry.
-            Score memory newScore = Score(msg.sender, score);
-            TopScores.push(newScore);
-        }
-        else
-        {
-            // If we reached the maximum stored scores amount,
+        if (topScores.length < M_MAXSCORES) {
+            // If we didn't reach the maximum stored
+            // scores coun yet, we simply add the new entry.
+            topScores.push(
+                Score({
+                    player: msg.sender,
+                    score: score,
+                })
+            );
+        } else {
+            // If we reached the maximum stored scores count,
             // we have to verify if the new received score is
             // higher than the lowest one in the top scores array.
-            int lowestScore = TopScores[0].score;
-            uint lowestScoreIndex = 0;
-            
+            uint256 lowestScore = topScores[0].score;
+            uint256 lowestScoreIndex = 0;
+
             // We search for the lowest stored score.
-            for(uint i = 1; i < TopScores.length; i++)
-            {
-                Score memory current = TopScores[i];
-                if(lowestScore > current.score)
-                {
-                    lowestScore = current.score;
+            for (uint256 i = 1; i < topScores.length; i += 1) {
+                if (lowestScore > topScores[i].score) {
+                    lowestScore = topScores[i].score;
                     lowestScoreIndex = i;
                 }
             }
-            
+
             // Now we can check our new pushed score against
             // the lowest one.
-            if(lowestScore < score)
-            {
-                Score memory newScoreToReplace = Score(msg.sender, score);
-                TopScores[lowestScoreIndex] = newScoreToReplace;
+            if (lowestScore < score) {
+                topScores[lowestScoreIndex] = Score({
+                    player: msg.sender,
+                    score: score
+                });
             }
         }
-    }
-    
-    /// <summary>
-    /// Get the amount of top scores.
-    /// </summary>
-    function GetTopScoresCount() view public returns (uint)
-    {
-        return TopScores.length;
     }
 }
