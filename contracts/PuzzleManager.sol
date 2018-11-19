@@ -1,101 +1,104 @@
-pragma solidity ^0.4.21;
+pragma solidity 0.4.25;
+
+import "./openzeppelin-solidity/contracts/ownership/Ownable.sol";
+
 
 // Manages the puzzles generation and hashes comparing.
-contract PuzzleManager
-{
+contract PuzzleManager is Ownable {
+    mapping (address => bool) private validators;
+
     // Represents a generated puzzle.
-    struct Puzzle
-    {
+    struct Puzzle {
         // The unique identifier for this puzzle.
-        uint Id;
+        uint256 id;
         // The owner who generated this puzzle.
-        address Owner;
+        address puzzleOwner;
         // The original metrics associated to this puzzle.
-        string OriginalMetrics;
+        string originalMetrics;
         // The original hashed metrics associated to this puzzle.
-        bytes32 OriginalHash;
+        bytes32 originalHash;
         // The map of stored hashed metrics associated to this puzzle.
-        mapping(address => bytes32) Hashes;
+        mapping (address => bytes32) hashes;
     }
 
     // Internal generated puzzles.
-    mapping(uint => Puzzle) m_puzzles;
+    mapping (uint256 => Puzzle) private puzzles;
 
     // The next available id.
-    uint m_currentId = 0;
+    uint256 private currentId = 0;
 
-    /// <summary>
-    /// Creates a new puzzle with given metrics.
-    /// </summary>
-    function CreatePuzzle(string metrics) public returns(uint)
-    {
-        // Instantiate the new puzzle in memory.
-        Puzzle memory puzzle = Puzzle(m_currentId, msg.sender, metrics, keccak256(bytes(metrics)));
-
+    /**
+     * @dev Creates a new puzzle with given metrics
+     * @param metrics The metrics related to the puzzle
+     * @return The id of the new puzzle
+     */
+    function createPuzzle(string metrics) external onlyOwner() returns (uint256) {
         // Increment the current id for the next puzzle.
-        m_currentId = m_currentId + 1;
+        currentId += 1;
 
         // Store the new generated puzzle.
-        m_puzzles[puzzle.Id] = puzzle;
+        puzzles[puzzle.Id] = Puzzle({
+            id: currentId,
+            puzzleOwner: msg.sender,
+            originalMetrics: metrics,
+            originalHash: keccak256(bytes(metrics))
+        });
 
-        return puzzle.Id;
+        return currentId;
     }
 
     /// <summary>
-    /// Pushes metrics for the given puzzle.
+    ///
     /// </summary>
-    function PushMetrics(uint puzzleId, string metrics) public returns(bool)
-    {
-        m_puzzles[puzzleId].Hashes[msg.sender] = keccak256(bytes(metrics));
-
-        return true;
+    /**
+     * @dev Pushes metrics for the given puzzle
+     * @param puzzleId The id of a specific puzzle
+     * @param metrics The metrics to push
+     */
+    function pushMetrics(uint256 puzzleId, string metrics) external onlyOwner() {
+        puzzles[puzzleId].hashes[msg.sender] = keccak256(bytes(metrics));
     }
 
-    /// <summary>
-    /// Compares the metrics associated to this address to the
-    /// original metrics, for the given puzzle id.
-    /// </summary>
-    function CompareMetrics(uint puzzleId) public view returns(bool)
-    {
-        Puzzle storage puzzle = m_puzzles[puzzleId];
-
-        if(puzzle.OriginalHash == puzzle.Hashes[msg.sender])
-        {
+    /**
+     * @dev Compares the metrics associated to this address to the original metrics, for the given puzzle id
+     * @param puzzleId The id of a specific puzzle
+     * @return True if the metrics are identical
+     */
+    function compareMetrics(uint256 puzzleId) public view returns (bool) {
+        if (puzzles[puzzleId].originalHash == puzzles[puzzleId].hashes[msg.sender]) {
             return true;
         }
+
         return false;
     }
 
     /// <summary>
     /// Returns the original metrics associated to a given puzzle id.
     /// </summary>
-    function GetPuzzleOriginalHash(uint puzzleId) public view returns(string)
+    function getPuzzleOriginalMetrics(uint256 puzzleId) public view returns (string)
     {
-        return m_puzzles[puzzleId].OriginalMetrics;
+        return puzzles[puzzleId].originalMetrics;
     }
 
     /// <summary>
     /// Returns the hashed metrics associated to a given puzzle id.
     /// </summary>
-    function GetPuzzleMetrics(uint puzzleId) public view returns(bytes)
-    {
-        bytes32 original = m_puzzles[puzzleId].OriginalHash;
+    function getPuzzleMetrics(uint256 puzzleId) public view returns (bytes) {
+        bytes32 original = puzzles[puzzleId].originalHash;
         bytes32 current;
-        if(msg.sender == m_puzzles[puzzleId].Owner)
-        {
-            current = m_puzzles[puzzleId].OriginalHash;
+
+        if (msg.sender == puzzles[puzzleId].owner) {
+            current = puzzles[puzzleId].originalHash;
+        } else {
+            current = puzzles[puzzleId].hashes[msg.sender];
         }
-        else
-        {
-            current = m_puzzles[puzzleId].Hashes[msg.sender];
-        }
- 
+
         bytes memory result = new bytes(64);
 
-        uint index1 = 0;
-        uint index2 = 32;
-        for(uint i = 0; i < 32; i++)
-        {
+        uint256 index1 = 0;
+        uint256 index2 = 32;
+
+        for (uint256 i = 0; i < 32; i += 1) {
             result[index1] = original[i];
             result[index2] = current[i];
             index1 = index1 + 1;
@@ -103,5 +106,12 @@ contract PuzzleManager
         }
 
         return result;
+    }
+
+    /// <summary>
+    /// Accept puzzle
+    /// </summary>
+    function acceptPuzzle() public onlyOwner() {
+
     }
 }
