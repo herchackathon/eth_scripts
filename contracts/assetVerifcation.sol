@@ -1,11 +1,11 @@
 pragma solidity 0.4.25;
 
-import "./base/Ownable.sol";
+import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+
 
 // Manages the puzzles generation and hashes comparing.
 /* TODO: Comply this contract to Solhint requirements */
-contract PuzzleManager is Ownable
-{
+contract PuzzleManager is Ownable {
     // Mapping visibility changed to private
     mapping (address => bool) private validators;
 
