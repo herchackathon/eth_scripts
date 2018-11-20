@@ -1,10 +1,10 @@
 /* eslint-env node */
 /* global artifacts */
 
-const Contract = artifacts.require('Contract');
+const PlayerScore = artifacts.require('PlayerScore');
 
 function deployContracts(deployer) {
-  deployer.deploy(Contract);
+  deployer.deploy(PlayerScore);
 }
 
 module.exports = deployContracts;
