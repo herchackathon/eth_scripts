@@ -2,16 +2,16 @@ pragma solidity 0.4.25;
 
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
-// Manages the puzzles generation and hashes comparing.
-contract PuzzleManager is Ownable
-{
-    mapping(address => bool) validators;
+
+/**
+ * @dev This contract manages the puzzles generation and hashes comparing
+ */
+contract PuzzleManager is Ownable {
 
     // Represents a generated puzzle.
-    struct Puzzle
-    {
+    struct Puzzle {
         // The unique identifier for this puzzle.
-        uint Id;
+        uint256 Id;
         // The owner who generated this puzzle.
         address Owner;
         // The original metrics associated to this puzzle.
@@ -28,14 +28,15 @@ contract PuzzleManager is Ownable
     }
 
     // Internal generated puzzles.
-    mapping(uint => Puzzle) m_puzzles;
+    mapping (uint => Puzzle) private m_puzzles;
 
     // The next available id.
-    uint m_currentId = 0;
+    uint256 private m_currentId = 0;
+
+    mapping (address => bool) private validators;
 
     // banlist
-
-    mapping(address => bool) banList;
+    mapping (address => bool) private banList;
 
     // Events
     event PuzzleCreated(uint puzzleId, string uniqueId);
@@ -45,15 +46,21 @@ contract PuzzleManager is Ownable
     /// <summary>
     /// Creates a new secure puzzle with given metrics.
     /// </summary>
-
-    function CreateSecurePuzzle(address addr, string plainTextMetrics, bytes32 metricsHash, bool checkOwner, string uniqueId) public returns(uint)
-    {
+    function CreateSecurePuzzle(
+        address addr,
+        string plainTextMetrics,
+        bytes32 metricsHash,
+        bool checkOwner,
+        string uniqueId
+    ) public returns (uint256) {
         if (banList[addr]) {
             revert("cheater is banned");
         }
 
-        if (checkOwner)
-            require(msg.sender == owner, "check owner fail");
+        if (checkOwner) {
+            address currentOwner = owner;
+            require(msg.sender == currentOwner, "Owner requirement failed");
+        }
 
         // Instantiate the new puzzle in memory.
         Puzzle memory puzzle = Puzzle(m_currentId, addr, plainTextMetrics, metricsHash, true, checkOwner);
@@ -72,11 +79,8 @@ contract PuzzleManager is Ownable
     /// <summary>
     /// Pushes secure metrics for the given puzzle.
     /// </summary>
-    function PushSecureMetrics(uint puzzleId, bytes32 metricsHash) public returns(bool)
-    {
-        if (banList[msg.sender]) {
-            revert("cheater is banned");
-        }
+    function PushSecureMetrics(uint puzzleId, bytes32 metricsHash) public returns(bool) {
+        require(banList[msg.sender] == false, "Player is banned");
 
         require(m_puzzles[puzzleId].secure, "puzzle is not secure");
 
@@ -113,9 +117,7 @@ contract PuzzleManager is Ownable
 
     function CreatePuzzle(string metrics, string uniqueId) public returns(uint)
     {
-        if (banList[msg.sender]) {
-            revert("cheater is banned");
-        }
+        require(banList[msg.sender] == false, "Player is banned");
 
         // Instantiate the new puzzle in memory.
         Puzzle memory puzzle = Puzzle(m_currentId, msg.sender, metrics, keccak256(bytes(metrics)), false, false);
@@ -136,9 +138,7 @@ contract PuzzleManager is Ownable
     /// </summary>
     function PushMetrics(uint puzzleId, string metrics) public returns(bool)
     {
-        if (banList[msg.sender]) {
-            revert("cheater is banned");
-        }
+        require(banList[msg.sender] == false, "Player is banned");
 
         m_puzzles[puzzleId].Hashes[msg.sender] = keccak256(bytes(metrics));
 
@@ -208,7 +208,7 @@ contract PuzzleManager is Ownable
     /// </summary>
     function ban(address user)
         public
-        onlyOwner
+        onlyOwner()
     {
         banList[user] = true;
     }
@@ -218,7 +218,7 @@ contract PuzzleManager is Ownable
     /// </summary>
     function unban(address user)
         public
-        onlyOwner
+        onlyOwner()
     {
         banList[user] = false;
     }
