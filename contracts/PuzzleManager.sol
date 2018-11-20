@@ -42,10 +42,16 @@ contract PuzzleManager is Ownable {
     event PuzzleCreated(uint puzzleId, string uniqueId);
 
     // X.1 SECURE PUZZLE [
-
-    /// <summary>
-    /// Creates a new secure puzzle with given metrics.
-    /// </summary>
+    /**
+     * @dev Creates a new secure puzzle with given metrics
+     * @param addr
+     * @param plainTextMetrics
+     * @param metricsHash
+     * @param checkOwner
+     * @param uniqueId
+     * @return The ID of the new puzzle
+     */
+    /* TODO: Add a description for the parameters */
     function CreateSecurePuzzle(
         address addr,
         string plainTextMetrics,
@@ -75,9 +81,12 @@ contract PuzzleManager is Ownable {
         return puzzle.Id;
     }
 
-    /// <summary>
-    /// Pushes secure metrics for the given puzzle.
-    /// </summary>
+    /**
+     * @devPushes secure metrics for the given puzzle
+     * @param puzzleId The ID of a specific puzzle
+     * @param metricsHash
+     * @return
+     */
     function PushSecureMetrics(uint puzzleId, bytes32 metricsHash) public returns(bool) {
         require(banList[msg.sender] == false, "Player is banned");
 
@@ -88,10 +97,12 @@ contract PuzzleManager is Ownable {
         return true;
     }
 
-    /// <summary>
-    /// Compares the metrics associated to this address to the
-    /// original metrics, for the given puzzle id.
-    /// </summary>
+    /**
+     * @dev Compares the metrics associated to this address to the
+     * original metrics, for the given puzzle id.
+     * @param puzzleId
+     * @param byOwner
+     */
     function CompareSecureMetrics(uint puzzleId, bool byOwner) public view returns(bool)
     {
         Puzzle storage puzzle = m_puzzles[puzzleId];
@@ -109,11 +120,12 @@ contract PuzzleManager is Ownable {
 
     // X.1 SECURE PUZZLE ]
     // X.2 UNSECURE PUZZLE [
-
-    /// <summary>
-    /// Creates a new puzzle with given metrics.
-    /// </summary>
-
+    /**
+     * @dev Creates a new puzzle with given metrics
+     * @param metrics
+     * @param uniqueId
+     * @return
+     */
     function CreatePuzzle(string metrics, string uniqueId) public returns(uint)
     {
         require(banList[msg.sender] == false, "Player is banned");
@@ -132,9 +144,12 @@ contract PuzzleManager is Ownable {
         return puzzle.Id;
     }
 
-    /// <summary>
-    /// Pushes metrics for the given puzzle.
-    /// </summary>
+    /**
+     * @dev Pushes metrics for the given puzzle
+     * @param puzzleId
+     * @param metrics
+     * @return
+     */
     function PushMetrics(uint puzzleId, string metrics) public returns(bool)
     {
         require(banList[msg.sender] == false, "Player is banned");
@@ -144,10 +159,12 @@ contract PuzzleManager is Ownable {
         return true;
     }
 
-    /// <summary>
-    /// Compares the metrics associated to this address to the
-    /// original metrics, for the given puzzle id.
-    /// </summary>
+    /**
+     * @dev Compares the metrics associated to this address to the
+     * original metrics, for the given puzzle id.
+     * @param puzzleId
+     * @return
+     */
     function CompareMetrics(uint puzzleId) public view returns(bool)
     {
         Puzzle storage puzzle = m_puzzles[puzzleId];
@@ -159,9 +176,11 @@ contract PuzzleManager is Ownable {
         return false;
     }
 
-    /// <summary>
-    /// Returns the original metrics associated to a given puzzle id.
-    /// </summary>
+    /**
+     * @dev Returns the original metrics associated to a given puzzle id
+     * @param puzzleId
+     * @return
+     */
     function GetPuzzleOriginalMetrics(uint puzzleId) public view returns(string)
     {
         return m_puzzles[puzzleId].OriginalMetrics;
@@ -169,19 +188,18 @@ contract PuzzleManager is Ownable {
 
     // X.2 UNSECURE PUZZLE ]
 
-    /// <summary>
-    /// Returns the hashed metrics associated to a given puzzle id.
-    /// </summary>
+    /**
+     * @dev Returns the hashed metrics associated to a given puzzle id
+     * @param puzzleId
+     * @return
+     */
     function GetPuzzleMetrics(uint puzzleId) public view returns(bytes)
     {
         bytes32 original = m_puzzles[puzzleId].OriginalHash;
         bytes32 current;
-        if (msg.sender == m_puzzles[puzzleId].Owner)
-        {
+        if (msg.sender == m_puzzles[puzzleId].Owner) {
             current = m_puzzles[puzzleId].OriginalHash;
-        }
-        else
-        {
+        } else {
             current = m_puzzles[puzzleId].Hashes[msg.sender];
         }
 
@@ -189,8 +207,7 @@ contract PuzzleManager is Ownable {
 
         uint index1 = 0;
         uint index2 = 32;
-        for (uint i = 0; i < 32; i++)
-        {
+        for (uint i = 0; i < 32; i++) {
             result[index1] = original[i];
             result[index2] = current[i];
             index1 = index1 + 1;
@@ -201,24 +218,19 @@ contract PuzzleManager is Ownable {
     }
 
     // BAN LOGIC [
-
-    /// <summary>
-    /// Ban address
-    /// </summary>
-    function ban(address user)
-        public
-        onlyOwner()
-    {
+    /**
+     * @dev Bans an address
+     * @param user The address to ban
+     */
+    function ban(address user) public onlyOwner() {
         banList[user] = true;
     }
 
-    /// <summary>
-    /// Ban address
-    /// </summary>
-    function unban(address user)
-        public
-        onlyOwner()
-    {
+    /**
+     * @dev Unbans an address
+     * @param user The address to unban
+     */
+    function unban(address user) public onlyOwner() {
         banList[user] = false;
     }
 
