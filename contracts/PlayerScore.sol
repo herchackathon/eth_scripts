@@ -46,7 +46,7 @@ contract PlayerScore {
             topScores.push(
                 Score({
                     player: msg.sender,
-                    score: score,
+                    score: score
                 })
             );
         } else {
