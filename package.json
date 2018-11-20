@@ -4,7 +4,8 @@
   "description": "scripts for ethtests",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "truffle test",
+    "ganache": "ganache-cli -a 10 --defaultBalanceEther 200 -l 8000000 -g 2200000000 -i 1540803758978"
   },
   "repository": {
     "type": "git",
