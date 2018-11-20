@@ -80,7 +80,7 @@ contract PuzzleManager is Ownable {
     }
 
     /**
-     * @devPushes secure metrics for the given puzzle
+     * @dev Pushes secure metrics for the given puzzle
      * @param puzzleId The ID of a specific puzzle
      * @param metricsHash
      * @return
