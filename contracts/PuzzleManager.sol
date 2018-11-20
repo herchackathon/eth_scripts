@@ -1,6 +1,6 @@
 pragma solidity 0.4.25;
 
-import "./base/Ownable.sol";
+import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
 // Manages the puzzles generation and hashes comparing.
 contract PuzzleManager is Ownable
