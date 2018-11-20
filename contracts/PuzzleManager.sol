@@ -1,13 +1,11 @@
 pragma solidity 0.4.25;
 
-import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
-
+import "./base/Ownable.sol";
 
 // Manages the puzzles generation and hashes comparing.
-/* TODO: Comply this contract to Solhint requirements */
-contract PuzzleManager is Ownable {
-    // Mapping visibility changed to private
-    mapping (address => bool) private validators;
+contract PuzzleManager is Ownable
+{
+    mapping(address => bool) validators;
 
     // Represents a generated puzzle.
     struct Puzzle
@@ -29,16 +27,15 @@ contract PuzzleManager is Ownable {
         bool createdByOwner;
     }
 
-    // Mapping visibility changed to private
     // Internal generated puzzles.
-    mapping(uint => Puzzle) private m_puzzles;
+    mapping(uint => Puzzle) m_puzzles;
 
     // The next available id.
     uint m_currentId = 0;
 
-    // Mapping visibility changed to private
     // banlist
-    mapping (address => bool) private banList;
+
+    mapping(address => bool) banList;
 
     // Events
     event PuzzleCreated(uint puzzleId, string uniqueId);
@@ -48,16 +45,12 @@ contract PuzzleManager is Ownable {
     /// <summary>
     /// Creates a new secure puzzle with given metrics.
     /// </summary>
-    // Changed function visibility to external
-    function CreateSecurePuzzle(
-        address addr,
-        string plainTextMetrics,
-        bytes32 metricsHash,
-        bool checkOwner,
-        string uniqueId
-    ) external returns (uint) {
-        // Add a require to check if the user is banned
-        require(banList[addr] == true, "The user is banned");
+
+    function CreateSecurePuzzle(address addr, string plainTextMetrics, bytes32 metricsHash, bool checkOwner, string uniqueId) public returns(uint)
+    {
+        if (banList[addr]) {
+            revert("cheater is banned");
+        }
 
         if (checkOwner)
             require(msg.sender == owner, "check owner fail");
