@@ -58,8 +58,7 @@ contract PuzzleManager is Ownable {
         }
 
         if (checkOwner) {
-            address currentOwner = owner;
-            require(msg.sender == currentOwner, "Owner requirement failed");
+            require(msg.sender == owner(), "Owner requirement failed");
         }
 
         // Instantiate the new puzzle in memory.
