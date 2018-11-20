@@ -59,9 +59,7 @@ contract PuzzleManager is Ownable {
         bool checkOwner,
         string uniqueId
     ) public returns (uint256) {
-        if (banList[addr]) {
-            revert("cheater is banned");
-        }
+        require(banList[msg.sender] == false, "Player is banned");
 
         if (checkOwner) {
             require(msg.sender == owner(), "Owner requirement failed");
