@@ -49,7 +49,6 @@ contract PuzzleManager is Ownable {
      * @param uniqueId Unique id
      * @return The ID of the new puzzle
      */
-    /* TODO: Is it mandatory to return the puzzle ID? It can only be received by another smart-contract */
     function createSecurePuzzle(
         address addr,
         string plainTextMetrics,
@@ -89,7 +88,7 @@ contract PuzzleManager is Ownable {
     function pushSecureMetrics(uint256 puzzleId, bytes32 metricsHash) external {
         require(banList[msg.sender] == false, "Player is banned");
 
-        require(puzzles[puzzleId].secure, "puzzle is not secure");
+        require(puzzles[puzzleId].secure, "Puzzle is not secure");
 
         puzzles[puzzleId].hashes[msg.sender] = metricsHash;
     }
@@ -159,9 +158,9 @@ contract PuzzleManager is Ownable {
      * @return Bool
      */
     function compareSecureMetrics(uint256 puzzleId, bool byOwner) external view returns (bool) {
-        require(puzzles[puzzleId].secure, "puzzle is not secure");
+        require(puzzles[puzzleId].secure, "Puzzle is not secure");
 
-        require(puzzles[puzzleId].createdByOwner == byOwner, "puzzle invalid owner");
+        require(puzzles[puzzleId].createdByOwner == byOwner, "Puzzle invalid owner");
 
         if (puzzles[puzzleId].originalHash == puzzles[puzzleId].hashes[msg.sender]) {
             return true;
@@ -213,7 +212,7 @@ contract PuzzleManager is Ownable {
         uint256 index1 = 0;
         uint256 index2 = 32;
 
-        for (uint256 i = 0; i < 32; i++) {
+        for (uint256 i = 0; i < 32; i += 1) {
             result[index1] = original[i];
             result[index2] = current[i];
             index1 += 1;
