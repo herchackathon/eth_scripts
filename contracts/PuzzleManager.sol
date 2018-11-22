@@ -156,6 +156,7 @@ contract PuzzleManager is Ownable {
      * original metrics, for the given puzzle id.
      * @param puzzleId The ID of a specific puzzle
      * @param byOwner bool
+     * @return Bool
      */
     function compareSecureMetrics(uint256 puzzleId, bool byOwner) external view returns (bool) {
         require(puzzles[puzzleId].secure, "puzzle is not secure");
