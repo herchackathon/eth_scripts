@@ -31,7 +31,7 @@ contract PlayerScore {
      * If no score exists, a new one is created.
      * @param score The score to set
      */
-    /* TODO: This function needs to be more secure, maybe internal */
+    /* WARNING: This function CANNOT stay public, its visibility needs to be changed to internal */
     function setScore(uint256 score) public {
         // Replace the old score with the new one,
         // if it is higher.
