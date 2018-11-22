@@ -34,20 +34,11 @@ contract('PlayerScore', (accounts) => {
     }));
 
   it('Should get the top scores', () => {
-    const topScores = [];
-
     for (let i = 0; i < 5; i += 1) {
       instance.topScores.call(i)
         .then((data) => {
-          const score = {
-            score: data[1].toNumber(),
-            player: data[0],
-          };
-
-          topScores.push(score);
-
-          console.log(`Top score ${i}:`);
-          console.log(score);
+          assert.equal(data[0], accounts[i], 'Score address is wrong');
+          assert.equal(data[1].toNumber(), i, 'Score amount is wrong');
         });
     }
   });
