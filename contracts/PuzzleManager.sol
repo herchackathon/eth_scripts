@@ -44,11 +44,11 @@ contract PuzzleManager is Ownable {
     // X.1 SECURE PUZZLE [
     /**
      * @dev Creates a new secure puzzle with given metrics
-     * @param addr
-     * @param plainTextMetrics
-     * @param metricsHash
-     * @param checkOwner
-     * @param uniqueId
+     * @param addr The owner of the puzzle
+     * @param plainTextMetrics Metrics to push (string)
+     * @param metricsHash The hash associated to the metrics
+     * @param checkOwner If true, check if the sender is the owner of the contract
+     * @param uniqueId Unique id
      * @return The ID of the new puzzle
      */
     /* TODO: Add a description for the parameters */
@@ -82,24 +82,21 @@ contract PuzzleManager is Ownable {
     /**
      * @dev Pushes secure metrics for the given puzzle
      * @param puzzleId The ID of a specific puzzle
-     * @param metricsHash
-     * @return
+     * @param metricsHash The hash associated to the metrics
      */
-    function PushSecureMetrics(uint puzzleId, bytes32 metricsHash) public returns(bool) {
+    function PushSecureMetrics(uint puzzleId, bytes32 metricsHash) public {
         require(banList[msg.sender] == false, "Player is banned");
 
         require(m_puzzles[puzzleId].secure, "puzzle is not secure");
 
         m_puzzles[puzzleId].Hashes[msg.sender] = metricsHash;
-
-        return true;
     }
 
     /**
      * @dev Compares the metrics associated to this address to the
      * original metrics, for the given puzzle id.
-     * @param puzzleId
-     * @param byOwner
+     * @param puzzleId The ID of a specific puzzle
+     * @param byOwner bool
      */
     function CompareSecureMetrics(uint puzzleId, bool byOwner) public view returns(bool)
     {
@@ -120,9 +117,9 @@ contract PuzzleManager is Ownable {
     // X.2 UNSECURE PUZZLE [
     /**
      * @dev Creates a new puzzle with given metrics
-     * @param metrics
-     * @param uniqueId
-     * @return
+     * @param metrics The metrics
+     * @param uniqueId A unique ID
+     * @return The ID of the new puzzle
      */
     function CreatePuzzle(string metrics, string uniqueId) public returns(uint)
     {
@@ -144,9 +141,9 @@ contract PuzzleManager is Ownable {
 
     /**
      * @dev Pushes metrics for the given puzzle
-     * @param puzzleId
-     * @param metrics
-     * @return
+     * @param puzzleId The ID of a specific puzzle
+     * @param metrics String
+     * @return Bool
      */
     function PushMetrics(uint puzzleId, string metrics) public returns(bool)
     {
@@ -160,8 +157,8 @@ contract PuzzleManager is Ownable {
     /**
      * @dev Compares the metrics associated to this address to the
      * original metrics, for the given puzzle id.
-     * @param puzzleId
-     * @return
+     * @param puzzleId The ID of a specific puzzle
+     * @return bool
      */
     function CompareMetrics(uint puzzleId) public view returns(bool)
     {
@@ -176,8 +173,8 @@ contract PuzzleManager is Ownable {
 
     /**
      * @dev Returns the original metrics associated to a given puzzle id
-     * @param puzzleId
-     * @return
+     * @param puzzleId The ID of a specific puzzle
+     * @return The original metrics of the specific puzzle
      */
     function GetPuzzleOriginalMetrics(uint puzzleId) public view returns(string)
     {
@@ -185,14 +182,12 @@ contract PuzzleManager is Ownable {
     }
 
     // X.2 UNSECURE PUZZLE ]
-
     /**
      * @dev Returns the hashed metrics associated to a given puzzle id
-     * @param puzzleId
-     * @return
+     * @param puzzleId The ID of a specific puzzle
+     * @return The metrics
      */
-    function GetPuzzleMetrics(uint puzzleId) public view returns(bytes)
-    {
+    function GetPuzzleMetrics(uint puzzleId) public view returns (bytes) {
         bytes32 original = m_puzzles[puzzleId].OriginalHash;
         bytes32 current;
         if (msg.sender == m_puzzles[puzzleId].Owner) {
