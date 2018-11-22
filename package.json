@@ -1,0 +1,31 @@
+{
+  "name": "eth_scripts",
+  "version": "1.0.0",
+  "description": "scripts for ethtests",
+  "main": "index.js",
+  "scripts": {
+    "test": "truffle test",
+    "ganache": "ganache-cli -a 10 --defaultBalanceEther 200 -l 8000000 -g 2200000000 -i 1540803758978"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/clemlak/eth_scripts.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/clemlak/eth_scripts/issues"
+  },
+  "homepage": "https://github.com/clemlak/eth_scripts#readme",
+  "dependencies": {
+    "dotenv": "^6.1.0",
+    "openzeppelin-solidity": "^2.0.0",
+    "truffle-hdwallet-provider": "0.0.6",
+    "web3": "^1.0.0-beta.36"
+  },
+  "devDependencies": {
+    "eslint": "^5.9.0",
+    "eslint-config-airbnb-base": "^13.1.0",
+    "eslint-plugin-import": "^2.14.0"
+  }
+}
