@@ -14,4 +14,64 @@ contract('PlayerScore', (accounts) => {
     .then((deployed) => {
       instance = deployed;
     }));
+
+  it('Should get the length of the topScores array', () => instance.getTopScoresCount()
+    .then((length) => {
+      assert.equal(length, 0, 'Length is wrong');
+    }));
+
+  it('Should set 5 scores', () => {
+    for (let i = 0; i < 5; i += 1) {
+      instance.setScore(i, {
+        from: accounts[i],
+      });
+    }
+  });
+
+  it('Should get the length of the topScores array', () => instance.getTopScoresCount()
+    .then((length) => {
+      assert.equal(length.toNumber(), 5, 'Length is wrong');
+    }));
+
+  it('Should get the top scores', () => {
+    const topScores = [];
+
+    for (let i = 0; i < 5; i += 1) {
+      instance.topScores.call(i)
+        .then((data) => {
+          const score = {
+            score: data[1].toNumber(),
+            player: data[0],
+          };
+
+          topScores.push(score);
+
+          console.log(`Top score ${i}:`);
+          console.log(score);
+        });
+    }
+  });
+
+  it('Should get the score of account #9', () => instance.scores.call((accounts[9]))
+    .then((score) => {
+      assert.equal(score.toNumber(), 0, 'Account #9 score is wrong');
+    }));
+
+  it('Should set a new score for account #9', () => instance.setScore(10, {
+    from: accounts[9],
+  }));
+
+  it('Should get the new score of account #9', () => instance.scores.call(accounts[9])
+    .then((score) => {
+      assert.equal(score.toNumber(), 10, 'Account #9 new score is wrong');
+    }));
+
+  it('Should set a new higher score for account #9', () => instance.setScore(100, {
+    from: accounts[9],
+  }));
+
+  it('Should get the new higher score of account #9', () => instance.scores.call(accounts[9])
+    .then((score) => {
+      assert.equal(score.toNumber(), 100, 'Account #9 new higher score is wrong');
+    }));
 });
