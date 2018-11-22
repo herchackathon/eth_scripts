@@ -43,6 +43,19 @@ contract('PlayerScore', (accounts) => {
     }
   });
 
+  it('Should set a new higher score for account #0', () => instance.setScore(100));
+
+  it('Should get again the length of the topScores array', () => instance.getTopScoresCount()
+    .then((length) => {
+      assert.equal(length, 5, 'Length is wrong');
+    }));
+
+  it('Should get the new top score #1', () => instance.topScores.call(0)
+    .then((data) => {
+      assert.equal(data[0], accounts[0], 'Score address is wrong');
+      assert.equal(data[1], 100, 'Score amount is wrong');
+    }));
+
   it('Should get the score of account #9', () => instance.scores.call((accounts[9]))
     .then((score) => {
       assert.equal(score.toNumber(), 0, 'Account #9 score is wrong');
