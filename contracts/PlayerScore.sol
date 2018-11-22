@@ -16,10 +16,10 @@ contract PlayerScore {
     }
 
     /// Most relevant scores stored in this contract.
-    Score[] private topScores;
+    Score[] public topScores;
 
     // Maps each player with its own score.
-    mapping (address => uint256) private scores;
+    mapping (address => uint256) public scores;
 
     /// Get the amount of top scores.
     function getTopScoresCount() external view returns (uint256) {
