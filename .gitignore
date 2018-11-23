@@ -1,0 +1,5 @@
+.vscode
+container
+node_modules/**
+package-lock.json
+

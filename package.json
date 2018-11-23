@@ -1,0 +1,22 @@
+{
+  "name": "eth-scripts",
+  "version": "1.0.0",
+  "description": "",
+  "main": "herc-scripts.js",
+  "dependencies": {
+    "blessed": "^0.1.81",
+    "blessed-contrib": "^4.8.8",
+    "js-sha3": "^0.8.0",
+    "mkdirp": "^0.5.1",
+    "ps-node": "^0.1.6",
+    "scanwatch": "^0.1.7",
+    "shelljs": "^0.8.3",
+    "walkdir": "0.0.12"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
