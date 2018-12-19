@@ -1,70 +1,4 @@
-//
-// + architecture 
-// ++ review
-// ++ refactoring
-// ++ PRNG puzzle blockchain problem
-// ++ secure & anticheat
-// ++ eth scripts
-// ++ deploy & validation contracts automaticly
-//
-// - contracts
-// ++ update PuzzleManager.sol
-// +++ new secure functions:
-// ++++ CreateSecurePuzzle(address addr, string plainTextMetrics, bytes32 metricsHash, bool checkOwner, string uniqueId) public returns(uint)
-// ++++ PushSecureMetrics(uint puzzleId, bytes32 metricsHash) public returns(bool)
-// ++++ CompareSecureMetrics(uint puzzleId, bool byOwner) public view returns(bool)
-// +++ rename PuzzleManager.sol to assetValidation.sol
-// --- truffle tests assetValidation.sol
-//
-// - hipr-restful (web service)
-// ++ default port is changed to 8086 
-// ++ api: link new secure functions
-// +++ registerPuzzleAddress/:address/:params
-// +++ createPuzzleSecure/:address/:puzzleType/:plainTextMetrics
-// +++ pushSecureMetrics/:puzzleId/:metricsHash
-// +++ compareSecureMetrics/:puzzleId
-// -- link callback from web ui (Julie)
-//
-// - HIPR
-// -- WebBuild 
-// +++ link axio.js to hipr-backend
-// *
-// +++ config
-// ++++ environment
-// +++++ dev, main 
-// +++++ hipr-restful url
-// +++++ eth: main, ropsten
-// ++++ contracts
-// +++++ mainnet, ropsten
-// +++++ deploy meta info (date, hashes)
-// *
-// --- web3 update new api
-// ++++ GetPuzzle -> hipr-restful
-// ++++ ValidatePuzzleResult -> web3 secure methods
-// .... testing
-//
-// . scripts
-// .. ui
-// +++ herc logo
-// +++ herc prices
-// *
-// +++ Main menu
-// +++ Log view
-// *
-// + scan dirs
-// + dirs strucuture
-// - contracts view
-// - contracts addresses
-// - contracts deploy
-// -- test ganache
-// -- test ropsten
-// -- test main
-// *
-// - apps
-// .. ganache
-// ... download
-// ... run
-// 
+
 
 const fs = require('fs'),
     mkdirp = require('mkdirp'),
@@ -200,6 +134,9 @@ mainMenuView.on('ui', dispatcher)
 var DeployContracts = require('./ui/views/DeployContracts')
 var deployContractsView
 
+var About = require('./ui/views/About')
+var aboutView
+
 function dispatcher(type, action, obj, param) {
     if (type == 'contracts') {
         if (action == 'deploy') {
@@ -230,6 +167,7 @@ function dispatcher(type, action, obj, param) {
     else if (type == 'About') {
         if (action == 'show') {
             logView.log('About show')
+            aboutView = new About(screen, {})
         }
     }
 

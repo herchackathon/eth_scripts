@@ -1,0 +1,9 @@
+FROM ubuntu:18.04 AS hipr_container
+
+RUN apt-get -qq update >> /dev/null
+RUN apt-get install -qq -y wget git automake libtool unzip build-essential mesa-common-dev >> /dev/null
+
+ADD ./hipr-setup.sh /root/hipr-setup.sh
+
+RUN chmod +x /root/hipr-setup.sh
+RUN	/root/hipr-setup.sh docker /root/files /root/build
