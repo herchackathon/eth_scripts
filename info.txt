@@ -94,3 +94,19 @@ xxx Deploy to server
 
 . export contracts config for HIPR
 
+. state monitor
+.. HERC local
+.. ganache
+.. hipr-restful
+.. build container
+.. build docker
+.. deploy remote
+.. deploy contracts
+... main
+... ropsten
+... ganache
+
++ config
+++ ui
++++ Config view
+++ script local config generate

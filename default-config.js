@@ -16,7 +16,8 @@ config = {
             'host': 'ec2-18-191-222-136.us-east-2.compute.amazonaws.com',
             'user': 'ubuntu',
             'pem': '~/.ssh/gojodev.pem',
-            'log': 'srv0.log'
+            'log': 'srv0.log',
+            'build-path': '~/hipr-deploy'
         }
     }
 }

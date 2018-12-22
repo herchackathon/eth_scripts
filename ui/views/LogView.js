@@ -11,7 +11,7 @@ class LogView extends View {
 
         this.defaultOptionsLog = {
             parent: screen,
-            width: '50%',
+            width: '100%',
             height: '50%',
             border: 'line',
             tags: true,

@@ -11,7 +11,7 @@ if [ "$#" -lt 3 ]; then
     usage
     exit 1
 fi
-
+#set -x
 MODE=$1
 FILES_PATH=$2
 DEPLOY_PATH=$3

@@ -137,6 +137,9 @@ var deployContractsView
 var About = require('./ui/views/About')
 var aboutView
 
+var Config = require('./ui/views/Config')
+var configView
+
 function dispatcher(type, action, obj, param) {
     if (type == 'contracts') {
         if (action == 'deploy') {
@@ -164,6 +167,20 @@ function dispatcher(type, action, obj, param) {
         }
     }
 
+    else if (type == 'Config') {
+        if (action == 'show') {
+            logView.log('Config show')
+            
+            updateConfiguration()
+
+            var scriptConfig = fs.readFileSync(__dirname + '/scripts/herc-local-config.sh')
+
+            configView = new Config(screen, {
+                config: options, 
+                scriptConfig: scriptConfig
+            })
+        }
+    }
     else if (type == 'About') {
         if (action == 'show') {
             logView.log('About show')
@@ -171,6 +188,11 @@ function dispatcher(type, action, obj, param) {
         }
     }
 
+    else if (type == 'contracts.compile') {
+        logView.log(`${type} ${action}`)
+        if (action == 'ganache' || action == 'ropsten' || action == 'main') {
+        }
+    }
     else if (type == 'contracts.deploy') {
         logView.log(`${type} ${action}`)
         if (action == 'ganache' || action == 'ropsten' || action == 'main') {
@@ -186,20 +208,46 @@ function dispatcher(type, action, obj, param) {
             proc.stderr.on('data', function(data) {
                 logView.error(data)
             })
-
- 
 //            util.execApp('./t.sh', {path: 'scripts'})
 //            util.execApp(__dirname + '/scripts/t.sh')
-        }
-        if (action == 'ropsten') {
-        }
-        if (action == 'main') {
         }
         if (action == 'hide') {
             if (deployContractsView) {
                 deployContractsView.destroy()
                 deployContractsView = null
             }
+        }
+    }
+
+    else if (type == 'deploy') {
+        if (action == 'all.local.container') {
+            logView.log('deloy local')
+
+            var action = 'deploy local container'
+
+            runScriptAction(action)
+        }
+        else if (action == 'all.local.docker') {
+            logView.log('deloy docker')
+
+            var action = 'deploy local docker'
+
+            runScriptAction(action)
+        }
+        else if (action == 'hipr-restful.dev-server') {
+            logView.log('deloy hipr-restful')
+
+            var action = 'deploy remote container'
+
+            runScriptAction(action)
+        }
+    }
+
+    else if (type == 'herc') {
+        if (action == 'airdrop') {
+            logView.log('herc airdrop')
+
+            getTopAddresses()
         }
     }
 
@@ -226,3 +274,79 @@ util.exportHIPRConfig(options, data)
 
 
 //util.startApp(options, 'ganache')
+
+function prepareLocalConfig (options) {
+    var s = `#
+# GENERATED! Don't edit file! 
+#
+
+REMOTE_BUILD==${options.deploy['build-path']}
+
+REMOTE_PEM=${options.deploy.pem}
+REMOTE_HOST=${options.deploy.user}@${options.deploy.host}
+    `
+    fs.writeFileSync(__dirname + '/scripts/herc-local-config.sh', s)
+}
+
+function runScriptAction (action) {
+    updateConfiguration()
+
+    var proc = util.execApp('bash ' + __dirname + `/scripts/herc-cli.sh ${action}`, {
+        path: path.resolve(__dirname + '/scripts')
+    })
+
+    proc.stdout.on('data', function(data) {
+        logView.log(data)
+    })
+    proc.stderr.on('data', function(data) {
+        logView.error(data)
+    })
+}
+
+function updateConfiguration () {
+    prepareLocalConfig({
+        config: options,
+        deploy: options.deploy['dev-server-0']
+    })
+}
+
+// ***
+
+var Blockchain
+
+function getTopAddresses() {
+    if (!Blockchain) {
+
+        Blockchain = require('./lib/blockchain/blockchain');
+        
+        var blockchain = new Blockchain;
+        
+        var optionsBlockchain = require('./lib/blockchain/default.json')
+        
+        blockchain.init(optionsBlockchain)
+    }
+
+    new Promise(async (resolve, reject)=>{
+
+        var res = await blockchain.getTopScoresCount()
+
+        var scores = await blockchain.getTopScores(0, res.topScoresCount)
+
+        let activeChain = optionsBlockchain.blockchain.activeChain,
+            network = activeChain[0],
+            name =  activeChain[1]
+        let addr = optionsBlockchain.blockchain[network][name]
+
+        logView.log(`Top PlayerScore contract addresses (at ${addr}):`)
+
+        var arr = scores.topScores
+        for (var i = 0; i < arr.length; i++) {
+            var o = arr[i]
+            logView.log(`${o.player} ${o.score}`)
+        }
+
+        logView.log(`Address list is ready in array. Need to export to csv and call airdrop`)
+
+    //    logView.log(JSON.stringify(scores))
+    })
+}

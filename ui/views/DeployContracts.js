@@ -11,7 +11,7 @@ class DeployContracts extends View {
         this.table = blessed.list({
             parent: screen,
             draggable: true,
-            align: "center",
+            align: "left",
             mouse: true,
             keys: true,
             vi: true,
@@ -27,19 +27,29 @@ class DeployContracts extends View {
             },
             selectedBg: 'green',
             items: [
-                "local-ganache",
-                "ropsten",
-                "main",
+                "Compile: local-ganache",
+                "Compile: ropsten",
+                "Compile: main",
+                "Deploy: local-ganache",
+                "Deploy: ropsten",
+                "Deploy: main",
             ]
         });
 
         this.table.on('select', function(node, index){
             console.log(index)
-            if (node.content == 'local-ganache') 
+            if (node.content == 'Compile: local-ganache') 
+                self.emit('ui', 'contracts.compile', 'ganache')
+            else if (node.content == 'Compile: ropsten')
+                self.emit('ui', 'contracts.compile', 'ropsten')
+            else if (node.content == 'Compile: main')
+                self.emit('ui', 'contracts.compile', 'main')
+
+                if (node.content == 'Deploy: local-ganache') 
                 self.emit('ui', 'contracts.deploy', 'ganache')
-            else if (node.content == 'ropsten')
+            else if (node.content == 'Deploy: ropsten')
                 self.emit('ui', 'contracts.deploy', 'ropsten')
-            else if (node.content == 'main')
+            else if (node.content == 'Deploy: main')
                 self.emit('ui', 'contracts.deploy', 'main')
         })
           

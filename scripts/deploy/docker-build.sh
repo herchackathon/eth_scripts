@@ -4,7 +4,7 @@ usage () {
     echo "   deploy-path Path to deploy"
 }
 
-if [ "$#" -ne 3 ]; then
+if [ "$#" -ne 2 ]; then
     usage
     exit 1
 fi

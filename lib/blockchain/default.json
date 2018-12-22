@@ -1,0 +1,66 @@
+{
+    "mongodb": "mongodb://localhost/hipr-restful",
+    "blockchain": {
+        "activeChain": ["eth", "infura-mainnet"],
+        "//activeChain": ["eos", "main"],
+        "eos": {
+            "main": {
+                "address": ""
+            }
+        },
+        "eth": {
+            "local-ganache": {
+                "url": "http://localhost:7545",
+                "contracts": {
+                    "PlayerScore": {
+                        "abiPath": "contracts/PlayerScore.abi",
+                        "address": "0x7ff12405aabebf121f9cecedc0664bca5d85fb19",
+                        "options": {
+                            "from": "0x9a4770D5CE5f30F9Db0c537f04a485836A72BDbF",
+                            "//gas": 4.612e6,
+                            "//gasPrice": 1
+                        }
+                    },
+                    "PuzzleManager": {
+                        "abiPath": "contracts/PuzzleManager.abi",
+                        "address": "0xb9c290788b604d52ad665bb3813dcdb4f2921655",
+                        "options": {
+                            "from": "0x9a4770D5CE5f30F9Db0c537f04a485836A72BDbF"
+                        }
+                    }
+            
+                }
+            },
+            "infura-ropsten": {
+                "url": "https://ropsten.infura.io/CHs7q12LsOAlHu4D3Kvr"
+            },
+            "infura-mainnet": {
+                "url": "https://eth-mainnet.alchemyapi.io/jsonrpc/DCuuSowPM6WbBCkzVfyl8VRYEIjNh9L8",
+                "contracts": {
+                    "PlayerScore": {
+                        "abiPath": "lib/blockchain/PlayerScore.abi",
+                        "address": "0xeed0eb7a4251ce217b7d37d370267735626ad2c6",
+                        "options": {
+                            "from": "0x9a4770D5CE5f30F9Db0c537f04a485836A72BDbF",
+                            "//gas": 4.612e6,
+                            "//gasPrice": 1
+                        }
+                    },
+                    "PuzzleManager": {
+                        "abiPath": "lib/blockchain/PuzzleManager.abi",
+                        "address": "0xf792c43f23c39f7de185cfdc6ce96aa69e9f00c1",
+                        "options": {
+                            "from": "0x9a4770D5CE5f30F9Db0c537f04a485836A72BDbF"
+                        }
+                    }
+                }
+            },
+            "infura-rinkeby": {
+                "url": "https://rinkeby.infura.io/CHs7q12LsOAlHu4D3Kvr"
+            },
+            "infura-kovan": {
+                "url": "https://kovan.infura.io/CHs7q12LsOAlHu4D3Kvr"
+            }
+        }
+    }
+}

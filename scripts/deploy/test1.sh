@@ -18,7 +18,7 @@ echo DOCKER=$DOCKER
 
 #./hipr-setup.sh local $FILES $DEPLOY
 
-#./hipr-setup.sh docker $FILES $DEPLOY
+№./hipr-setup.sh docker $FILES $DOCKER
 
 
 REMOTE_DEPLOY=~/hipr-deploy
