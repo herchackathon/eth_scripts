@@ -27,30 +27,31 @@ class DeployContracts extends View {
             },
             selectedBg: 'green',
             items: [
-                "Compile: local-ganache",
-                "Compile: ropsten",
-                "Compile: main",
-                "Deploy: local-ganache",
-                "Deploy: ropsten",
-                "Deploy: main",
+                "Compile contracts",
+
+                "Deploy: HIPR local-ganache",
+                "Deploy: HIPR ropsten",
+                "Deploy: HIPR main",
+
+                "Deploy: HERC local-ganache",
             ]
         });
 
         this.table.on('select', function(node, index){
             console.log(index)
-            if (node.content == 'Compile: local-ganache') 
-                self.emit('ui', 'contracts.compile', 'ganache')
-            else if (node.content == 'Compile: ropsten')
-                self.emit('ui', 'contracts.compile', 'ropsten')
-            else if (node.content == 'Compile: main')
-                self.emit('ui', 'contracts.compile', 'main')
+            if (node.content == 'Compile contracts') 
+                self.emit('ui', 'contracts.compile', 'ganache', 'hipr,herc')
 
-                if (node.content == 'Deploy: local-ganache') 
-                self.emit('ui', 'contracts.deploy', 'ganache')
-            else if (node.content == 'Deploy: ropsten')
-                self.emit('ui', 'contracts.deploy', 'ropsten')
-            else if (node.content == 'Deploy: main')
-                self.emit('ui', 'contracts.deploy', 'main')
+            else if (node.content == 'Deploy: HIPR local-ganache') 
+                self.emit('ui', 'contracts.deploy', 'ganache', 'hipr')
+            else if (node.content == 'Deploy: HIPR ropsten')
+                self.emit('ui', 'contracts.deploy', 'ropsten', 'hipr')
+            else if (node.content == 'Deploy: HIPR main') 
+                self.emit('ui', 'contracts.deploy', 'main', 'hipr')
+
+            else if (node.content == 'Deploy: HERC local-ganache')
+                self.emit('ui', 'contracts.deploy', 'ganache', 'herc')
+
         })
           
         this.table.append(new blessed.Text({  

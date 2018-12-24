@@ -191,26 +191,27 @@ function dispatcher(type, action, obj, param) {
     else if (type == 'contracts.compile') {
         logView.log(`${type} ${action}`)
         if (action == 'ganache' || action == 'ropsten' || action == 'main') {
+            var action = `compile`
+
+            if (obj.indexOf('hipr') != -1)
+                runScriptTruffle('hipr', action)
+            if (obj.indexOf('herc') != -1)
+                runScriptTruffle('hipr', action)
         }
     }
     else if (type == 'contracts.deploy') {
         logView.log(`${type} ${action}`)
+        
         if (action == 'ganache' || action == 'ropsten' || action == 'main') {
             var network = action == 'main' ? 'live' : action
-            var proc = util.execApp(__dirname + `/scripts/truffle.sh ${network}`, {
-//            util.execApp('truffle migrate --network ganache', {
-                path: path.resolve(options.contractsSource['assetVerification'])
-            })
+            var action = `deploy ${network}`
 
-            proc.stdout.on('data', function(data) {
-                logView.log(data)
-            })
-            proc.stderr.on('data', function(data) {
-                logView.error(data)
-            })
-//            util.execApp('./t.sh', {path: 'scripts'})
-//            util.execApp(__dirname + '/scripts/t.sh')
+            if (obj.indexOf('hipr') != -1)
+                runScriptTruffle('hipr', action)
+            if (obj.indexOf('herc') != -1)
+                runScriptTruffle('herc', action)
         }
+
         if (action == 'hide') {
             if (deployContractsView) {
                 deployContractsView.destroy()
@@ -288,6 +289,22 @@ REMOTE_HOST=${options.deploy.user}@${options.deploy.host}
     fs.writeFileSync(__dirname + '/scripts/herc-local-config.sh', s)
 }
 
+function runScriptTruffle (mode, action) {
+    var proc = util.execApp('bash ' + __dirname + `/scripts/truffle.sh ${action}`, {
+//            util.execApp('truffle migrate --network ganache', {
+        path: path.resolve(options.contractsSource['assetVerification'])
+    })
+
+    proc.stdout.on('data', function(data) {
+        logView.log(data)
+    })
+    proc.stderr.on('data', function(data) {
+        logView.error(data)
+    })
+//            util.execApp('./t.sh', {path: 'scripts'})
+//            util.execApp(__dirname + '/scripts/t.sh')
+}
+
 function runScriptAction (action) {
     updateConfiguration()
 
@@ -313,11 +330,12 @@ function updateConfiguration () {
 // ***
 
 var Blockchain
+var blockchain
 
-function getTopAddresses() {
+function lazyInitBlockchain() {
     if (!Blockchain) {
 
-        Blockchain = require('./lib/blockchain/blockchain');
+        var Blockchain = require('./lib/blockchain/blockchain');
         
         var blockchain = new Blockchain;
         
@@ -325,8 +343,13 @@ function getTopAddresses() {
         
         blockchain.init(optionsBlockchain)
     }
+    return blockchain
+}
+
+function getTopAddresses() {
 
     new Promise(async (resolve, reject)=>{
+        var blockchain = lazyInitBlockchain()
 
         var res = await blockchain.getTopScoresCount()
 
@@ -335,7 +358,7 @@ function getTopAddresses() {
         let activeChain = optionsBlockchain.blockchain.activeChain,
             network = activeChain[0],
             name =  activeChain[1]
-        let addr = optionsBlockchain.blockchain[network][name]
+        let addr = optionsBlockchain.blockchain[network][name].contracts.PlayerScore.address
 
         logView.log(`Top PlayerScore contract addresses (at ${addr}):`)
 
@@ -343,10 +366,119 @@ function getTopAddresses() {
         for (var i = 0; i < arr.length; i++) {
             var o = arr[i]
             logView.log(`${o.player} ${o.score}`)
+//            console.log(`${o.player} ${o.score}`)
         }
 
-        logView.log(`Address list is ready in array. Need to export to csv and call airdrop`)
+//        logView.log(`Address list is ready in array. Need to export to csv and call airdrop`)
 
     //    logView.log(JSON.stringify(scores))
+
+        let payoutOptions = {
+            hercContract: '0x',
+            payoutBoss: '0x',
+            rewards: [
+                1000,   // 1st
+                900,    // 2nd
+                800,    // 3rd
+                700,
+                600,
+                500,
+                400,
+                300,
+                200,
+                100,
+            ]
+        }
+
+        // 11-50 = 10 HERC
+        for (var i = 11; i < 50; i++)
+            payoutOptions.rewards.push(10)
+
+        blockchain.payoutSetup(payoutOptions)
+
+        var WEEK = 7*24*60*60
+        let season = {
+            startDate: new Date(),
+            releaseDate: new Date(),
+            seasonInterval: 1*WEEK
+        }
+
+        blockchain.payoutSetSeason(season)
+
+        var over = isSeasonOver
+
+        logView.log(`isSeasonOver=${over}`)
+
+        let payoutInfo = await blockchain.payoutInfo()
+
+        logView.log(JSON.stringify(payoutInfo))
+
+        blockchain.payoutToWinners();
     })
 }
+
+//ganache-cli
+//"./node_modules/.bin/ganache-cli -m 'dust fevercissors aware frown minor start ladder lobster success hundred clerk' -a 50"
+
+new Promise(async (resolve, reject)=>{
+    var blockchain = lazyInitBlockchain()
+
+    const ganache = require("ganache-cli");
+    const Web3 = require('web3')
+
+    web3 = new Web3(ganache.provider())
+
+    //web3.setProvider(ganache.provider());
+
+
+
+    //var accs = web3.personal_listAccounts()
+//    var accs = web3.eth.accounts
+//    var accs = await web3.eth.personal.getAccounts()
+    var bweb3 = blockchain.eth.defaultWeb3()
+
+    var accs = await bweb3.eth.personal.getAccounts()
+
+    logView.log({'accounts': accs})
+
+    var defScores = [
+        5,
+        7,
+        1,
+        9,
+        11,
+
+        999,
+        777,
+        100500,
+        1,
+        888
+    ]
+
+    logView.log({'initial top scores': defScores})
+
+
+    for (var i = 0; i < 10; i++) {
+        bweb3.eth.defaultAccount = accs[i]
+
+        await blockchain.setScore(defScores[i])
+    }
+
+    var topScoresCount = await blockchain.getTopScoresCount()
+
+    logView.log({topScoresCount})
+
+    var topScores = await blockchain.getTopScores(0, topScoresCount)
+
+    logView.log({topScores})
+})
+
+console.log = (...a) => {
+    logView.log(a)
+}
+
+console.error = (...a) => {
+    logView.error(a)
+}
+
+//console.log(1, 2, 3)

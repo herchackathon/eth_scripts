@@ -1,7 +1,8 @@
 {
     "mongodb": "mongodb://localhost/hipr-restful",
     "blockchain": {
-        "activeChain": ["eth", "infura-mainnet"],
+        "activeChain": ["eth", "local-ganache"],
+        "///activeChain": ["eth", "infura-mainnet"],
         "//activeChain": ["eos", "main"],
         "eos": {
             "main": {
@@ -13,7 +14,7 @@
                 "url": "http://localhost:7545",
                 "contracts": {
                     "PlayerScore": {
-                        "abiPath": "contracts/PlayerScore.abi",
+                        "abiPath": "lib/blockchain/PlayerScore.abi",
                         "address": "0x7ff12405aabebf121f9cecedc0664bca5d85fb19",
                         "options": {
                             "from": "0x9a4770D5CE5f30F9Db0c537f04a485836A72BDbF",
@@ -22,7 +23,7 @@
                         }
                     },
                     "PuzzleManager": {
-                        "abiPath": "contracts/PuzzleManager.abi",
+                        "abiPath": "lib/blockchain/PuzzleManager.abi",
                         "address": "0xb9c290788b604d52ad665bb3813dcdb4f2921655",
                         "options": {
                             "from": "0x9a4770D5CE5f30F9Db0c537f04a485836A72BDbF"

@@ -4,7 +4,7 @@ usage () {
     echo "   network ethereum network (main|ropsten|ganache)"
 }
 
-if [ "$#" -ne 2 ]; then
+if [ "$#" -ne 1 ]; then
     usage
     exit 1
 fi
