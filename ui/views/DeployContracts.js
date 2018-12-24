@@ -27,7 +27,7 @@ class DeployContracts extends View {
             },
             selectedBg: 'green',
             items: [
-                "Compile contracts",
+                "Compile HIPR contracts",
 
                 "Deploy: HIPR local-ganache",
                 "Deploy: HIPR ropsten",
@@ -39,8 +39,8 @@ class DeployContracts extends View {
 
         this.table.on('select', function(node, index){
             console.log(index)
-            if (node.content == 'Compile contracts') 
-                self.emit('ui', 'contracts.compile', 'ganache', 'hipr,herc')
+            if (node.content == 'Compile HIPR contracts') 
+                self.emit('ui', 'contracts.compile', 'ganache', 'hipr')
 
             else if (node.content == 'Deploy: HIPR local-ganache') 
                 self.emit('ui', 'contracts.deploy', 'ganache', 'hipr')

@@ -191,12 +191,12 @@ function dispatcher(type, action, obj, param) {
     else if (type == 'contracts.compile') {
         logView.log(`${type} ${action}`)
         if (action == 'ganache' || action == 'ropsten' || action == 'main') {
-            var action = `compile`
+            var action = `compile ${action}`
 
             if (obj.indexOf('hipr') != -1)
                 runScriptTruffle('hipr', action)
             if (obj.indexOf('herc') != -1)
-                runScriptTruffle('hipr', action)
+                runScriptTruffle('herc', action)
         }
     }
     else if (type == 'contracts.deploy') {
@@ -289,14 +289,63 @@ REMOTE_HOST=${options.deploy.user}@${options.deploy.host}
     fs.writeFileSync(__dirname + '/scripts/herc-local-config.sh', s)
 }
 
+var deployedContracts = {
+    PlayerScore: {
+        address: null
+    },
+    PuzzleManager: {
+        address: null
+    }
+}
+
 function runScriptTruffle (mode, action) {
+    var contractsPath = path.resolve(options.contractsSource['assetVerification'])
     var proc = util.execApp('bash ' + __dirname + `/scripts/truffle.sh ${action}`, {
 //            util.execApp('truffle migrate --network ganache', {
-        path: path.resolve(options.contractsSource['assetVerification'])
+        path: contractsPath
     })
 
     proc.stdout.on('data', function(data) {
-        logView.log(data)
+        var ss = data.split('\n')
+        var a = action.split(' ')[0]
+        for (var i in ss) {
+    //        data = data.replace(/^\s+|\s+$/g, '');
+            var s = ss[i]
+            logView.log(s)
+            
+            function extractContractAddress(sx) {
+                var s1 = null
+                if (s.indexOf(sx) != -1)
+                    s1 = s.replace(sx, '').trim()
+                return s1
+            }
+
+            if (a == 'deploy') {
+                var playerScoreContractAddress = extractContractAddress('PlayerScore: ')
+                var puzzleManagerContractAddress = extractContractAddress('PuzzleManager: ')
+                if (playerScoreContractAddress != null)
+                    deployedContracts.PlayerScore.address = playerScoreContractAddress
+                else if (puzzleManagerContractAddress != null)
+                    deployedContracts.PuzzleManager.address = puzzleManagerContractAddress
+            }
+
+            var done = extractContractAddress('TRUFFLE DONE')
+            if (done != null) {
+
+                // process compiled files
+                var p = contractsPath + '/build/contracts'
+                logView.log(`compiled files: ${p}`)
+                var files = fs.readdirSync(p)
+                for (var i in files) {
+                    var file = files[i]
+                    logView.log(`  {#008000-fg}${file}{/}`);
+                }
+
+                if (a == 'deploy')
+                    logView.log(JSON.stringify(deployedContracts))
+                logView.log('>>> truffle extraction is done <<<')
+            }
+        }
     })
     proc.stderr.on('data', function(data) {
         logView.error(data)
@@ -456,8 +505,7 @@ new Promise(async (resolve, reject)=>{
     ]
 
     logView.log({'initial top scores': defScores})
-
-
+    
     for (var i = 0; i < 10; i++) {
         bweb3.eth.defaultAccount = accs[i]
 

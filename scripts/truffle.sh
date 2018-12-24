@@ -4,7 +4,7 @@ usage () {
     echo "   network ethereum network (main|ropsten|ganache)"
 }
 
-if [ "$#" -ne 1 ]; then
+if [ "$#" -ne 2 ]; then
     usage
     exit 1
 fi
@@ -17,12 +17,23 @@ echo ACTION=$ACTION
 echo NETWORK=$NETWORK
 echo CONTRACTS `pwd`
 
-if [ action == 'deploy' ]; then 
-    truffle migrate --network $NETWORK #>2.txt 2>3.txt
+if [ "$ACTION" == 'deploy' ]; then 
+    truffle migrate --network=$NETWORK --reset
+    #truffle migrate --network $NETWORK #>2.txt 2>3.txt
+    E=$?
+    echo TRUFFLE DONE!
+    exit $E
 fi
 
-if [ action == 'compile' ]; then 
-    truffle compile
+if [ "$ACTION" == 'compile' ]; then 
+    truffle compile --network $NETWORK
+    E=$?
+    echo TRUFFLE DONE!
+    exit $E
 fi
 
+echo NO ACTION: $ACTION
+echo ERROR >2
+exit 1
     #echo `pwd` `ls` >1.txt
+
