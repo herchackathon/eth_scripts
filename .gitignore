@@ -3,3 +3,4 @@ container
 node_modules/**
 package-lock.json
 
+contracts-deploy/ganache/**

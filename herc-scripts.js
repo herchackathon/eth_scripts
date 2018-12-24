@@ -6,7 +6,8 @@ const fs = require('fs'),
     blessed = require('blessed'),
     contrib = require('blessed-contrib'),
     defaultConfig = require('./default-config.js'),
-    path = require('path')
+    path = require('path'),
+    keccak256 = require('js-sha3').keccak256
 
 var util = require('./lib/util')
 
@@ -191,12 +192,12 @@ function dispatcher(type, action, obj, param) {
     else if (type == 'contracts.compile') {
         logView.log(`${type} ${action}`)
         if (action == 'ganache' || action == 'ropsten' || action == 'main') {
-            var action = `compile ${action}`
+            var network = action == 'main' ? 'live' : action
 
             if (obj.indexOf('hipr') != -1)
-                runScriptTruffle('hipr', action)
+                runScriptTruffle('hipr', 'compile', network)
             if (obj.indexOf('herc') != -1)
-                runScriptTruffle('herc', action)
+                runScriptTruffle('herc', 'compile', network)
         }
     }
     else if (type == 'contracts.deploy') {
@@ -204,12 +205,11 @@ function dispatcher(type, action, obj, param) {
         
         if (action == 'ganache' || action == 'ropsten' || action == 'main') {
             var network = action == 'main' ? 'live' : action
-            var action = `deploy ${network}`
 
             if (obj.indexOf('hipr') != -1)
-                runScriptTruffle('hipr', action)
+                runScriptTruffle('hipr', 'deploy', network)
             if (obj.indexOf('herc') != -1)
-                runScriptTruffle('herc', action)
+                runScriptTruffle('herc', 'deploy', network)
         }
 
         if (action == 'hide') {
@@ -298,9 +298,16 @@ var deployedContracts = {
     }
 }
 
-function runScriptTruffle (mode, action) {
-    var contractsPath = path.resolve(options.contractsSource['assetVerification'])
-    var proc = util.execApp('bash ' + __dirname + `/scripts/truffle.sh ${action}`, {
+function runScriptTruffle (mode, action, network) {
+    
+    var startDate = new Date()
+
+    var contractType = {
+        'herc': 'herctoken',
+        'hipr': 'assetVerification'
+    }
+    var contractsPath = path.resolve(options.contractsSource[contractType[mode]])
+    var proc = util.execApp('bash ' + __dirname + `/scripts/truffle.sh ${action} ${network}`, {
 //            util.execApp('truffle migrate --network ganache', {
         path: contractsPath
     })
@@ -334,16 +341,14 @@ function runScriptTruffle (mode, action) {
 
                 // process compiled files
                 var p = contractsPath + '/build/contracts'
-                logView.log(`compiled files: ${p}`)
-                var files = fs.readdirSync(p)
-                for (var i in files) {
-                    var file = files[i]
-                    logView.log(`  {#008000-fg}${file}{/}`);
-                }
+                processCompiledContracts(mode, network, p)
 
                 if (a == 'deploy')
                     logView.log(JSON.stringify(deployedContracts))
-                logView.log('>>> truffle extraction is done <<<')
+                
+                var endDate = new Date()
+
+                logView.log(`>>> truffle done in ${(endDate.getTime() - startDate.getTime()) / 1000} seconds`)
             }
         }
     })
@@ -354,12 +359,102 @@ function runScriptTruffle (mode, action) {
 //            util.execApp(__dirname + '/scripts/t.sh')
 }
 
+function processCompiledContracts(mode, network, p) {
+    var lastest = `${new Date().toISOString()}`
+    var base = __dirname + `/contracts-deploy/${network}/${mode}`
+    var outpath = `${base}/${lastest}`
+
+    logView.log(`process compiled files: ${p}`)
+    var files = fs.readdirSync(p)
+    for (var i in files) {
+        var file = files[i]
+
+        logView.log(`  {#008000-fg}${file}{/}`);
+
+        var name = path.parse(path.basename(file)).name
+        if (mode == 'hipr') {
+            if (['PuzzleManager', 'PlayerScore'].indexOf(name) != -1) {
+                exportContract(outpath, name, `${p}/${file}`)
+            }
+        }
+        else if (mode == 'herc') {
+            if (['HERCToken'].indexOf(name) != -1) {
+                exportContract(outpath, name, `${p}/${file}`)
+            }
+        }
+    }
+
+    logView.log(`{#f020f0-fg}recreate symlink ${lastest} to lastest{/}`);
+    exec(`rm ${base}/lastest`)
+    exec(`ln -s ${lastest} lastest`, { path: base })
+}
+
+function exportContract(outpath, name, source) {
+
+    mkdirp.sync(outpath)
+
+    var file = `${outpath}/${name}`
+
+    logView.log(`    {#d0d000-fg}-> Export to ${file}{/}`);
+
+    var build = `${file}.build.json`
+    var abi = `${file}.abi.json`
+    var bytecode = `${file}.bytecode.json`
+    var sol = `${file}.sol`
+    var meta = `${file}.meta.json`
+
+    var f = fs.readFileSync(source, 'utf8')
+    var c = JSON.parse(f)
+
+    var buildString = f
+    var abiString = JSON.stringify(c.abi)
+    var sourceString = c.source
+    var bytecodeString = c.bytecode
+
+    var m = {
+        contractName: c.contractName,
+        sourcePath: c.sourcePath,
+        exportedSymbols: c.ast.exportedSymbols,
+        compiler: c.compiler,
+        updatedAt: c.updatedAt,
+        validation: {
+            hash: '',
+            deployDate: new Date().toISOString(),
+            deployBy: 'HERC Team',
+            abiHash: keccak256(abiString),
+            sourceSize: sourceString.length,
+            sourceLines: sourceString.split('\m').length,
+            sourceHash: keccak256(sourceString),
+            bytecodeHash: keccak256(bytecodeString),
+            buildHash: keccak256(buildString)
+        }
+    }
+    m.validation.hash = keccak256(JSON.stringify(m.validation))
+
+    fs.writeFileSync(meta, JSON.stringify(m, null, 2))
+    fs.writeFileSync(build, buildString)
+    fs.writeFileSync(abi, abiString)
+    fs.writeFileSync(bytecode, bytecodeString)
+    fs.writeFileSync(sol, sourceString)
+}
+
 function runScriptAction (action) {
     updateConfiguration()
 
     var proc = util.execApp('bash ' + __dirname + `/scripts/herc-cli.sh ${action}`, {
         path: path.resolve(__dirname + '/scripts')
     })
+
+    proc.stdout.on('data', function(data) {
+        logView.log(data)
+    })
+    proc.stderr.on('data', function(data) {
+        logView.error(data)
+    })
+}
+
+function exec(cmd, options) {
+    var proc = util.execApp(cmd, options)
 
     proc.stdout.on('data', function(data) {
         logView.log(data)

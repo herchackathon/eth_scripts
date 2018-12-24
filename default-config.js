@@ -2,7 +2,8 @@ config = {
     containerDir: 'container',
     contractsDeployDir: '../blockchain/contracts-deploy',
     contractsSource: {
-        'assetVerification': '../blockchain/contracts-dev/assetVerification'
+        'assetVerification': '../blockchain/contracts-dev/assetVerification',
+        'herctoken': '../blockchain/contracts-dev/herc-main-dev'
     },
     apps: {
         ganache: {
