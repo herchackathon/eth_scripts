@@ -4,3 +4,5 @@ node_modules/**
 package-lock.json
 
 contracts-deploy/ganache/**
+config/blockchain-lastest.json
+

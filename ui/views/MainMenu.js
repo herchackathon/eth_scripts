@@ -27,16 +27,18 @@ class MainMenu extends View {
             },
             selectedBg: 'green',
             items: [
-                "(+) Deploy contracts",
-                "(+) Run ganache",
-                "(-) Run: hipr-restful local dev",
-                "(-) Run: HERC local dev",
-                "(+) Deploy: build local container",
-                "(+) Deploy: build local docker",
-                "(+) Deploy: hipr-restful to dev-server",
+                "(*) Show HIPR info",
+                "(*) Simulate HIPR scores",
                 "(*) Airdrop HIPR to winners",
+                "Deploy contracts",
+                "Run ganache",
+                "Deploy: build local container",
+                "Deploy: build local docker",
+                "Deploy: hipr-restful to dev-server",
                 "View config",
                 "About",
+                "(-) Run: hipr-restful local dev",
+                "(-) Run: HERC local dev",
             ]
         });
 
@@ -63,8 +65,14 @@ class MainMenu extends View {
 
             
             else if (s == 'Airdrop HIPR to winners')
-                self.emit('ui', 'herc', 'airdrop')
+                self.emit('ui', 'hipr', 'airdrop')
 
+            else if (s == 'Simulate HIPR scores')
+                self.emit('ui', 'hipr', 'simulate-scores')
+            
+            else if (s == 'Show HIPR info')
+                self.emit('ui', 'hipr', 'info')
+            
             else if (s == 'View config')
                 self.emit('ui', 'Config', 'show')
             else if (s == 'About')

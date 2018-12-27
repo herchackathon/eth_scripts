@@ -12,6 +12,7 @@
         "eth": {
             "local-ganache": {
                 "url": "http://localhost:7545",
+                "network": "ganache",
                 "contracts": {
                     "PlayerScore": {
                         "abiPath": "lib/blockchain/PlayerScore.abi",
@@ -33,10 +34,12 @@
                 }
             },
             "infura-ropsten": {
-                "url": "https://ropsten.infura.io/CHs7q12LsOAlHu4D3Kvr"
+                "url": "https://ropsten.infura.io/CHs7q12LsOAlHu4D3Kvr",
+                "network": "ropsten"
             },
             "infura-mainnet": {
                 "url": "https://eth-mainnet.alchemyapi.io/jsonrpc/DCuuSowPM6WbBCkzVfyl8VRYEIjNh9L8",
+                "network": "main",
                 "contracts": {
                     "PlayerScore": {
                         "abiPath": "lib/blockchain/PlayerScore.abi",
@@ -57,10 +60,12 @@
                 }
             },
             "infura-rinkeby": {
-                "url": "https://rinkeby.infura.io/CHs7q12LsOAlHu4D3Kvr"
+                "url": "https://rinkeby.infura.io/CHs7q12LsOAlHu4D3Kvr",
+                "network": "rinkeby"
             },
             "infura-kovan": {
-                "url": "https://kovan.infura.io/CHs7q12LsOAlHu4D3Kvr"
+                "url": "https://kovan.infura.io/CHs7q12LsOAlHu4D3Kvr",
+                "network": "kovan"
             }
         }
     }

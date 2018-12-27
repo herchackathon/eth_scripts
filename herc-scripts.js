@@ -241,14 +241,27 @@ function dispatcher(type, action, obj, param) {
             var action = 'deploy remote container'
 
             runScriptAction(action)
+
+            logView.log('CONTRACTS ARE DEPLOYED, RESET BLOCKCHAIN FOR RECONFIGURE!')
+            blockchain.reset();
         }
     }
 
-    else if (type == 'herc') {
+    else if (type == 'hipr') {
         if (action == 'airdrop') {
             logView.log('herc airdrop')
 
-            getTopAddresses()
+            airdrop()
+        }
+        if (action == 'simulate-scores') {
+            logView.log('hipr simulate-scores')
+
+            simulateScores()
+        }
+        if (action == 'info') {
+            logView.log('hipr info')
+
+            hiprInfo()
         }
     }
 
@@ -289,15 +302,6 @@ REMOTE_HOST=${options.deploy.user}@${options.deploy.host}
     fs.writeFileSync(__dirname + '/scripts/herc-local-config.sh', s)
 }
 
-var deployedContracts = {
-    PlayerScore: {
-        address: null
-    },
-    PuzzleManager: {
-        address: null
-    }
-}
-
 function runScriptTruffle (mode, action, network) {
     
     var startDate = new Date()
@@ -312,6 +316,8 @@ function runScriptTruffle (mode, action, network) {
         path: contractsPath
     })
 
+    var deployedContracts = {}
+        
     proc.stdout.on('data', function(data) {
         var ss = data.split('\n')
         var a = action.split(' ')[0]
@@ -330,10 +336,14 @@ function runScriptTruffle (mode, action, network) {
             if (a == 'deploy') {
                 var playerScoreContractAddress = extractContractAddress('PlayerScore: ')
                 var puzzleManagerContractAddress = extractContractAddress('PuzzleManager: ')
+                var hercTokenContractAddress = extractContractAddress('HERCToken: ')
+
                 if (playerScoreContractAddress != null)
-                    deployedContracts.PlayerScore.address = playerScoreContractAddress
+                    deployedContracts["PlayerScore"] = {address: playerScoreContractAddress}
                 else if (puzzleManagerContractAddress != null)
-                    deployedContracts.PuzzleManager.address = puzzleManagerContractAddress
+                    deployedContracts["PuzzleManager"] = {address: puzzleManagerContractAddress}
+                else if (hercTokenContractAddress != null)
+                    deployedContracts["HERCToken"] = {address: hercTokenContractAddress}
             }
 
             var done = extractContractAddress('TRUFFLE DONE')
@@ -341,10 +351,19 @@ function runScriptTruffle (mode, action, network) {
 
                 // process compiled files
                 var p = contractsPath + '/build/contracts'
-                processCompiledContracts(mode, network, p)
+                var lastest = `${new Date().toISOString()}`
+                var base = __dirname + `/contracts-deploy/${network}/${mode}`
+                processCompiledContracts(mode, network, p, base, lastest)
 
-                if (a == 'deploy')
+                if (a == 'deploy') {
                     logView.log(JSON.stringify(deployedContracts))
+
+                    fs.writeFileSync(`${base}/${lastest}/deploy.json`, JSON.stringify(deployedContracts, null, 2))
+
+                    logView.log(`{#f020f0-fg}recreate symlink ${lastest} to lastest-deployed{/}`);
+                    exec(`rm ${base}/lastest-deployed`)
+                    exec(`ln -s ${lastest} lastest-deployed`, { path: base })
+                }
                 
                 var endDate = new Date()
 
@@ -359,9 +378,7 @@ function runScriptTruffle (mode, action, network) {
 //            util.execApp(__dirname + '/scripts/t.sh')
 }
 
-function processCompiledContracts(mode, network, p) {
-    var lastest = `${new Date().toISOString()}`
-    var base = __dirname + `/contracts-deploy/${network}/${mode}`
+function processCompiledContracts(mode, network, p, base, lastest) {
     var outpath = `${base}/${lastest}`
 
     logView.log(`process compiled files: ${p}`)
@@ -407,7 +424,7 @@ function exportContract(outpath, name, source) {
     var c = JSON.parse(f)
 
     var buildString = f
-    var abiString = JSON.stringify(c.abi)
+    var abiString = JSON.stringify(c.abi, null, 2)
     var sourceString = c.source
     var bytecodeString = c.bytecode
 
@@ -476,24 +493,77 @@ function updateConfiguration () {
 var Blockchain
 var blockchain
 
-function lazyInitBlockchain() {
-    if (!Blockchain) {
+var optionsBlockchain
 
-        var Blockchain = require('./lib/blockchain/blockchain');
-        
-        var blockchain = new Blockchain;
-        
-        var optionsBlockchain = require('./lib/blockchain/default.json')
-        
-        blockchain.init(optionsBlockchain)
+function lazyInitBlockchain() {
+    if (!blockchain) {
+
+        Blockchain = require('./lib/blockchain/blockchain');
+
+        blockchain = new Blockchain;
     }
+//        global.blockchain = blockchain
+        
+        var options = require('./config/blockchain.json')
+
+        optionsBlockchain = options
+
+        // auto configure [
+
+        var chain = options.blockchain[options.blockchain.activeChain[0]][options.blockchain.activeChain[1]]
+        var network = chain.network
+        var contractsHERCPath = `${__dirname}/contracts-deploy/${network}/herc/lastest-deployed`
+        var contractsHIPRPath = `${__dirname}/contracts-deploy/${network}/hipr/lastest-deployed`
+
+        if (!fs.existsSync(contractsHERCPath)) {
+            logView.error(`Contracts HERC path not found at ${contractsHERCPath}`)
+            return null
+        }
+        if (!fs.existsSync(contractsHIPRPath)) {
+            logView.error(`Contracts HIPR path not found at ${contractsHIPRPath}`)
+            return null
+        }
+
+        var contractHERC = require(contractsHERCPath + '/deploy.json')
+        var contractHIPR = require(contractsHIPRPath + '/deploy.json')
+
+        chain.contracts["PlayerScore"] = chain.contracts["PlayerScore"] || {}
+        chain.contracts["PuzzleManager"] = chain.contracts["PuzzleManager"] || {}
+        chain.contracts["HERCToken"] = chain.contracts["HERCToken"] || {}
+
+        chain.contracts.PlayerScore.address = contractHIPR.PlayerScore.address
+        chain.contracts.PlayerScore.abiPath = `${contractsHIPRPath}/PlayerScore.abi.json`
+        chain.contracts.PlayerScore.validation = require(`${contractsHIPRPath}/PlayerScore.meta.json`)
+        
+        chain.contracts.PuzzleManager.address = contractHIPR.PuzzleManager.address
+        chain.contracts.PuzzleManager.abiPath = `${contractsHIPRPath}/PuzzleManager.abi.json`
+        chain.contracts.PuzzleManager.validation = require(`${contractsHIPRPath}/PuzzleManager.meta.json`)
+        
+        chain.contracts.HERCToken.address = contractHERC.HERCToken.address
+        chain.contracts.HERCToken.abiPath = `${contractsHERCPath}/HERCToken.abi.json`
+        chain.contracts.HERCToken.validation = require(`${contractsHERCPath}/HERCToken.meta.json`)
+
+        optionsBlockchain.___WARNING___ = "WARNING! Don't edit this file, generated automaticly" 
+
+        fs.writeFileSync(__dirname + '/config/blockchain-lastest.json', JSON.stringify(optionsBlockchain, null, 2));
+
+        optionsBlockchain.chain = chain
+
+        // auto configure ]
+
+        blockchain.init(optionsBlockchain)
+    
     return blockchain
 }
 
-function getTopAddresses() {
+// AIRDROP [
+
+function airdrop() {
 
     new Promise(async (resolve, reject)=>{
         var blockchain = lazyInitBlockchain()
+        if (!blockchain)
+            return
 
         var res = await blockchain.getTopScoresCount()
 
@@ -517,29 +587,6 @@ function getTopAddresses() {
 
     //    logView.log(JSON.stringify(scores))
 
-        let payoutOptions = {
-            hercContract: '0x',
-            payoutBoss: '0x',
-            rewards: [
-                1000,   // 1st
-                900,    // 2nd
-                800,    // 3rd
-                700,
-                600,
-                500,
-                400,
-                300,
-                200,
-                100,
-            ]
-        }
-
-        // 11-50 = 10 HERC
-        for (var i = 11; i < 50; i++)
-            payoutOptions.rewards.push(10)
-
-        blockchain.payoutSetup(payoutOptions)
-
         var WEEK = 7*24*60*60
         let season = {
             startDate: new Date(),
@@ -549,7 +596,7 @@ function getTopAddresses() {
 
         blockchain.payoutSetSeason(season)
 
-        var over = isSeasonOver
+        var over = blockchain.isSeasonOver
 
         logView.log(`isSeasonOver=${over}`)
 
@@ -561,11 +608,16 @@ function getTopAddresses() {
     })
 }
 
+// AIRDROP ]
+// SIMULATE SCORES [
+
 //ganache-cli
 //"./node_modules/.bin/ganache-cli -m 'dust fevercissors aware frown minor start ladder lobster success hundred clerk' -a 50"
 
-new Promise(async (resolve, reject)=>{
+async function simulateScores() {
     var blockchain = lazyInitBlockchain()
+    if (!blockchain)
+        return
 
     const ganache = require("ganache-cli");
     const Web3 = require('web3')
@@ -599,22 +651,105 @@ new Promise(async (resolve, reject)=>{
         888
     ]
 
+    await blockchain.wipeScores()
+
+    configurePayout()
+    
     logView.log({'initial top scores': defScores})
     
     for (var i = 0; i < 10; i++) {
         bweb3.eth.defaultAccount = accs[i]
+        blockchain.eth.options.contracts.PlayerScore.options.from = bweb3.eth.defaultAccount
 
         await blockchain.setScore(defScores[i])
     }
 
-    var topScoresCount = await blockchain.getTopScoresCount()
+    bweb3.eth.defaultAccount = accs[0]
+    blockchain.eth.options.contracts.PlayerScore.options.from = bweb3.eth.defaultAccount
 
-    logView.log({topScoresCount})
+    var season = {
+        startDate: new Date().getTime(),
+        releaseDate: new Date().getTime(),
+        seasonInterval: 1000,
+    }
+    await blockchain.payoutSetSeason(season)
 
-    var topScores = await blockchain.getTopScores(0, topScoresCount)
+    hiprInfo()
+}
 
-    logView.log({topScores})
-})
+// SIMULATE SCORES ]
+
+// CONFIGURE: PAYOUT [
+
+function configurePayout() {
+    
+    let payoutOptions = {
+        hercContract: optionsBlockchain.chain.contracts.HERCToken.address,
+        payoutBoss: blockchain.eth.options.contracts.PlayerScore.options.from,
+        rewards: [
+            1000,   // 1st
+            900,    // 2nd
+            800,    // 3rd
+            700,
+            600,
+            500,
+            400,
+            300,
+            200,
+            100,
+        ]
+    }
+
+    // 11-50 = 10 HERC
+    for (var i = 11; i < 50; i++)
+        payoutOptions.rewards.push(10)
+
+    blockchain.payoutSetup(payoutOptions)
+}
+
+// CONFIGURE: PAYOUT ]
+    
+// HIPR: INFO [
+    
+async function hiprInfo () {
+    var blockchain = lazyInitBlockchain()
+    if (!blockchain)
+        return
+
+    var res = await blockchain.getTopScoresCount()
+
+    var scores = await blockchain.getTopScores(0, res.topScoresCount)
+
+    logView.log('TopScores:')
+    var arr = scores.topScores
+    for (var i = 0; i < arr.length; i++) {
+        var o = arr[i]
+        logView.log(`  ${o.player} ${o.score}`)
+//            console.log(`${o.player} ${o.score}`)
+    }
+
+    let payoutInfo = await blockchain.payoutInfo()
+    var s = ''
+    if (payoutInfo.rewards && payoutInfo.rewards.length) {
+        for (var i = 0; i < payoutInfo.rewards.length; i++) {
+            var r = payoutInfo.rewards[i]
+            s += r.rank + '-' + r.reward + ' '
+        }
+        payoutInfo['rewards'] = s
+    }
+    logView.log(JSON.stringify(payoutInfo, null, 2))
+
+    var over = await blockchain.isSeasonOver()
+    logView.log(`isSeasonOver=${over.result}`)
+
+}
+
+// HIPR: INFO ]
+
+/*
+new Promise(async (resolve, reject)=>{
+    await simulateScores()
+})*/
 
 console.log = (...a) => {
     logView.log(a)
