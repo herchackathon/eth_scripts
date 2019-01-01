@@ -1,4 +1,6 @@
 config = {
+    selectedNetwork: {eth: 'ganache', backend: 'local-ganache'},
+//    selectedNetwork: {eth: 'ropsten', backend: 'infura-ropsten'},
     containerDir: 'container',
     contractsDeployDir: '../blockchain/contracts-deploy',
     contractsSource: {

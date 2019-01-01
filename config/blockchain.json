@@ -18,7 +18,7 @@
                         "abiPath": "lib/blockchain/PlayerScore.abi",
                         "address": "0x7ff12405aabebf121f9cecedc0664bca5d85fb19",
                         "options": {
-                            "from": "0x9a4770D5CE5f30F9Db0c537f04a485836A72BDbF",
+                            "from": "0x2d7DCbCd35737890540DdEE4Aa229B2Cb15DE615",
                             "//gas": 4.612e6,
                             "//gasPrice": 1
                         }
@@ -27,7 +27,7 @@
                         "abiPath": "lib/blockchain/PuzzleManager.abi",
                         "address": "0xb9c290788b604d52ad665bb3813dcdb4f2921655",
                         "options": {
-                            "from": "0x9a4770D5CE5f30F9Db0c537f04a485836A72BDbF"
+                            "from": "0x2d7DCbCd35737890540DdEE4Aa229B2Cb15DE615"
                         }
                     }
             
@@ -35,7 +35,13 @@
             },
             "infura-ropsten": {
                 "url": "https://ropsten.infura.io/CHs7q12LsOAlHu4D3Kvr",
-                "network": "ropsten"
+                "network": "ropsten",
+                "contracts": {
+                    "PuzzleManager": {
+                    },
+                    "PlayerScore": {
+                    }
+                }
             },
             "infura-mainnet": {
                 "url": "https://eth-mainnet.alchemyapi.io/jsonrpc/DCuuSowPM6WbBCkzVfyl8VRYEIjNh9L8",

@@ -126,8 +126,10 @@ util.init({
     logView
 })
 
+var options = defaultConfig
+
 var MainMenu = require('./ui/views/MainMenu')
-var mainMenuView = new MainMenu(screen)
+var mainMenuView = new MainMenu(screen, options)
 mainMenuView.focus()
 
 mainMenuView.on('ui', dispatcher)
@@ -268,8 +270,6 @@ function dispatcher(type, action, obj, param) {
     screen.render();
 }
 
-var options = defaultConfig
-
 // HIPR CONTAINER [
 
 var hiprRestfulDir = path.join(options.containerDir, 'hipr-restful')
@@ -406,6 +406,8 @@ function processCompiledContracts(mode, network, p, base, lastest) {
     exec(`ln -s ${lastest} lastest`, { path: base })
 }
 
+//var truffleFlattener = require('truffle-flattener')
+
 function exportContract(outpath, name, source) {
 
     mkdirp.sync(outpath)
@@ -418,6 +420,7 @@ function exportContract(outpath, name, source) {
     var abi = `${file}.abi.json`
     var bytecode = `${file}.bytecode.json`
     var sol = `${file}.sol`
+    var solFlatten = `${file}-flatten.sol`
     var meta = `${file}.meta.json`
 
     var f = fs.readFileSync(source, 'utf8')
@@ -427,6 +430,23 @@ function exportContract(outpath, name, source) {
     var abiString = JSON.stringify(c.abi, null, 2)
     var sourceString = c.source
     var bytecodeString = c.bytecode
+
+    // save sol flatten [
+    
+    var sf = util.execApp(`${__dirname}/node_modules/.bin/truffle-flattener ${c.sourcePath}`, {
+        path: path.dirname(source),
+        async: false
+    })
+
+    if (sf.stderr != '')
+        logView.error(sf.stderr)
+    
+    sourceString = sf.stdout
+
+//    var sourceFlattenString = sf.stdout
+//    fs.writeFileSync(solFlatten, sourceFlattenString)
+    
+    // save sol flatten ]
 
     var m = {
         contractName: c.contractName,
@@ -479,6 +499,7 @@ function exec(cmd, options) {
     proc.stderr.on('data', function(data) {
         logView.error(data)
     })
+
 }
 
 function updateConfiguration () {
@@ -495,18 +516,22 @@ var blockchain
 
 var optionsBlockchain
 
-function lazyInitBlockchain() {
+function lazyInitBlockchain(globalOptions) {
     if (!blockchain) {
 
         Blockchain = require('./lib/blockchain/blockchain');
 
         blockchain = new Blockchain;
     }
+
 //        global.blockchain = blockchain
         
         var options = require('./config/blockchain.json')
 
         optionsBlockchain = options
+
+        options.blockchain.activeChain[0] = 'eth' // todo: check for eos
+        options.blockchain.activeChain[1] = globalOptions.selectedNetwork.backend
 
         // auto configure [
 
@@ -531,6 +556,14 @@ function lazyInitBlockchain() {
         chain.contracts["PuzzleManager"] = chain.contracts["PuzzleManager"] || {}
         chain.contracts["HERCToken"] = chain.contracts["HERCToken"] || {}
 
+        chain.contracts.PlayerScore.options = chain.contracts.PlayerScore.options || {}
+        chain.contracts.PuzzleManager.options = chain.contracts.PuzzleManager.options || {}
+        chain.contracts.HERCToken.options = chain.contracts.HERCToken.options || {}
+
+//        chain.contracts.PlayerScore.options.from = 
+//        chain.contracts.PuzzleManager.options.from = 
+//        chain.contracts.HERCToken.options.from = 
+
         chain.contracts.PlayerScore.address = contractHIPR.PlayerScore.address
         chain.contracts.PlayerScore.abiPath = `${contractsHIPRPath}/PlayerScore.abi.json`
         chain.contracts.PlayerScore.validation = require(`${contractsHIPRPath}/PlayerScore.meta.json`)
@@ -539,9 +572,15 @@ function lazyInitBlockchain() {
         chain.contracts.PuzzleManager.abiPath = `${contractsHIPRPath}/PuzzleManager.abi.json`
         chain.contracts.PuzzleManager.validation = require(`${contractsHIPRPath}/PuzzleManager.meta.json`)
         
-        chain.contracts.HERCToken.address = contractHERC.HERCToken.address
-        chain.contracts.HERCToken.abiPath = `${contractsHERCPath}/HERCToken.abi.json`
-        chain.contracts.HERCToken.validation = require(`${contractsHERCPath}/HERCToken.meta.json`)
+        if (contractHERC.HERCToken && contractHERC.HERCToken.address) {
+            chain.contracts.HERCToken.address = contractHERC.HERCToken.address
+            chain.contracts.HERCToken.abiPath = `${contractsHERCPath}/HERCToken.abi.json`
+            chain.contracts.HERCToken.validation = require(`${contractsHERCPath}/HERCToken.meta.json`)
+        }
+        else {
+            logView.error(`HERCToken not deployed at ${chain.network}`)
+            chain.contracts.HERCToken.address = ''
+        }
 
         optionsBlockchain.___WARNING___ = "WARNING! Don't edit this file, generated automaticly" 
 
@@ -561,7 +600,7 @@ function lazyInitBlockchain() {
 function airdrop() {
 
     new Promise(async (resolve, reject)=>{
-        var blockchain = lazyInitBlockchain()
+        var blockchain = lazyInitBlockchain(options)
         if (!blockchain)
             return
 
@@ -615,7 +654,7 @@ function airdrop() {
 //"./node_modules/.bin/ganache-cli -m 'dust fevercissors aware frown minor start ladder lobster success hundred clerk' -a 50"
 
 async function simulateScores() {
-    var blockchain = lazyInitBlockchain()
+    var blockchain = lazyInitBlockchain(options)
     if (!blockchain)
         return
 
@@ -651,13 +690,16 @@ async function simulateScores() {
         888
     ]
 
+    for (var i = defScores.length; i < 50; i++)
+        defScores.push(i)
+
     await blockchain.wipeScores()
 
     configurePayout()
     
     logView.log({'initial top scores': defScores})
     
-    for (var i = 0; i < 10; i++) {
+    for (var i = 0; i < defScores.length; i++) {
         bweb3.eth.defaultAccount = accs[i]
         blockchain.eth.options.contracts.PlayerScore.options.from = bweb3.eth.defaultAccount
 
@@ -683,8 +725,10 @@ async function simulateScores() {
 
 function configurePayout() {
     
+    var HERCToken = optionsBlockchain.chain.contracts.HERCToken || {address: '0x123456789'}
+
     let payoutOptions = {
-        hercContract: optionsBlockchain.chain.contracts.HERCToken.address,
+        hercContract: HERCToken.address,
         payoutBoss: blockchain.eth.options.contracts.PlayerScore.options.from,
         rewards: [
             1000,   // 1st
@@ -701,7 +745,7 @@ function configurePayout() {
     }
 
     // 11-50 = 10 HERC
-    for (var i = 11; i < 50; i++)
+    for (var i = payoutOptions.rewards.length; i < 50; i++)
         payoutOptions.rewards.push(10)
 
     blockchain.payoutSetup(payoutOptions)
@@ -712,7 +756,7 @@ function configurePayout() {
 // HIPR: INFO [
     
 async function hiprInfo () {
-    var blockchain = lazyInitBlockchain()
+    var blockchain = lazyInitBlockchain(options)
     if (!blockchain)
         return
 

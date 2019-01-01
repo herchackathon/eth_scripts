@@ -8,6 +8,8 @@ class LogView extends View {
         super(screen)
 
         var self = this
+        
+        this.options = options
 
         this.defaultOptionsLog = {
             parent: screen,

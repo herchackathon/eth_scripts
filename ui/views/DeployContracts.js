@@ -17,7 +17,7 @@ class DeployContracts extends View {
             vi: true,
             alwaysScroll: true,
             width: "50%",
-            height: 8,
+            height: 12,
             top: 0,
             right: 0,
 //            left: "center",
@@ -34,6 +34,7 @@ class DeployContracts extends View {
                 "Deploy: HIPR main",
 
                 "Deploy: HERC local-ganache",
+                "Deploy: HERC ropsten",
             ]
         });
 
@@ -51,6 +52,8 @@ class DeployContracts extends View {
 
             else if (node.content == 'Deploy: HERC local-ganache')
                 self.emit('ui', 'contracts.deploy', 'ganache', 'herc')
+            else if (node.content == 'Deploy: HERC ropsten')
+                self.emit('ui', 'contracts.deploy', 'ropsten', 'herc')
 
         })
           

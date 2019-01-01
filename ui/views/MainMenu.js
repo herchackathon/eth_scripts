@@ -8,6 +8,13 @@ class MainMenu extends View {
 
         var self = this
 
+        var selectedNetwork = options.selectedNetwork
+
+        var network = selectedNetwork.eth
+        var showHIPRinfo = `Show HIPR info (${network})`
+        var simulateHIPRscores = `Simulate HIPR scores (${network})`
+        var airdropHIPRtowinners = `Airdrop HIPR to winners (${network})`
+
         this.table = blessed.list({
             parent: screen,
             draggable: true,
@@ -27,9 +34,9 @@ class MainMenu extends View {
             },
             selectedBg: 'green',
             items: [
-                "(*) Show HIPR info",
-                "(*) Simulate HIPR scores",
-                "(*) Airdrop HIPR to winners",
+                `(*) ${showHIPRinfo}`,
+                `(*) ${simulateHIPRscores}`,
+                `(*) ${airdropHIPRtowinners}`,
                 "Deploy contracts",
                 "Run ganache",
                 "Deploy: build local container",
@@ -64,13 +71,13 @@ class MainMenu extends View {
                 self.emit('ui', 'deploy', 'hipr-restful.dev-server')
 
             
-            else if (s == 'Airdrop HIPR to winners')
+            else if (s == airdropHIPRtowinners)
                 self.emit('ui', 'hipr', 'airdrop')
 
-            else if (s == 'Simulate HIPR scores')
+            else if (s == simulateHIPRscores)
                 self.emit('ui', 'hipr', 'simulate-scores')
             
-            else if (s == 'Show HIPR info')
+            else if (s == showHIPRinfo)
                 self.emit('ui', 'hipr', 'info')
             
             else if (s == 'View config')
