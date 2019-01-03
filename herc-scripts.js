@@ -265,6 +265,11 @@ function dispatcher(type, action, obj, param) {
 
             hiprInfo()
         }
+        if (action == 'configure') {
+            logView.log('hipr configure')
+
+            confiugreHIPR()
+        }
     }
 
     screen.render();
@@ -281,11 +286,11 @@ mkdirp(hiprRestfulDir)
 
 // HIPR CONTAINER ]
 
-
+/*
 var data = util.scanDataDirs(options)
 
 util.exportHIPRConfig(options, data)
-
+*/
 
 //util.startApp(options, 'ganache')
 
@@ -552,35 +557,7 @@ function lazyInitBlockchain(globalOptions) {
         var contractHERC = require(contractsHERCPath + '/deploy.json')
         var contractHIPR = require(contractsHIPRPath + '/deploy.json')
 
-        chain.contracts["PlayerScore"] = chain.contracts["PlayerScore"] || {}
-        chain.contracts["PuzzleManager"] = chain.contracts["PuzzleManager"] || {}
-        chain.contracts["HERCToken"] = chain.contracts["HERCToken"] || {}
-
-        chain.contracts.PlayerScore.options = chain.contracts.PlayerScore.options || {}
-        chain.contracts.PuzzleManager.options = chain.contracts.PuzzleManager.options || {}
-        chain.contracts.HERCToken.options = chain.contracts.HERCToken.options || {}
-
-//        chain.contracts.PlayerScore.options.from = 
-//        chain.contracts.PuzzleManager.options.from = 
-//        chain.contracts.HERCToken.options.from = 
-
-        chain.contracts.PlayerScore.address = contractHIPR.PlayerScore.address
-        chain.contracts.PlayerScore.abiPath = `${contractsHIPRPath}/PlayerScore.abi.json`
-        chain.contracts.PlayerScore.validation = require(`${contractsHIPRPath}/PlayerScore.meta.json`)
-        
-        chain.contracts.PuzzleManager.address = contractHIPR.PuzzleManager.address
-        chain.contracts.PuzzleManager.abiPath = `${contractsHIPRPath}/PuzzleManager.abi.json`
-        chain.contracts.PuzzleManager.validation = require(`${contractsHIPRPath}/PuzzleManager.meta.json`)
-        
-        if (contractHERC.HERCToken && contractHERC.HERCToken.address) {
-            chain.contracts.HERCToken.address = contractHERC.HERCToken.address
-            chain.contracts.HERCToken.abiPath = `${contractsHERCPath}/HERCToken.abi.json`
-            chain.contracts.HERCToken.validation = require(`${contractsHERCPath}/HERCToken.meta.json`)
-        }
-        else {
-            logView.error(`HERCToken not deployed at ${chain.network}`)
-            chain.contracts.HERCToken.address = ''
-        }
+        chain.contracts = configureChain(chain.contracts, contractHERC, contractHIPR, contractsHIPRPath, contractsHERCPath, false)
 
         optionsBlockchain.___WARNING___ = "WARNING! Don't edit this file, generated automaticly" 
 
@@ -697,7 +674,7 @@ async function simulateScores() {
 
     configurePayout()
     
-    logView.log({'initial top scores': defScores})
+    logView.log({'initial top scores': defScores.join(', ')})
     
     for (var i = 0; i < defScores.length; i++) {
         bweb3.eth.defaultAccount = accs[i]
@@ -789,6 +766,148 @@ async function hiprInfo () {
 }
 
 // HIPR: INFO ]
+
+function confiugreHIPR(options_) {
+//    var pathHIPR = options_.path,
+//        defaultNetwork = options.network
+
+    var server = 'amazon'
+    var hiprUrl = `http://${server}:8086/api/1.0`
+
+    var network = 'ganache'
+    var ethUrl = 'http://localhost:7545'
+
+    var pathHIPR = `${__dirname}/../hipr/HIPR-dev`
+    var pathRest = `${__dirname}/../restful-hipr`
+
+    
+    logView.log(`HIPR ${pathHIPR}`)
+    logView.log(`REST ${pathRest}`)
+
+    logView.log(`load contract ${network} for ${ethUrl}`)
+
+    var contractsHERCPath = `${__dirname}/contracts-deploy/${network}/herc/lastest-deployed`
+    var contractsHIPRPath = `${__dirname}/contracts-deploy/${network}/hipr/lastest-deployed`
+
+    var contractHERC = require(contractsHERCPath + '/deploy.json')
+    var contractHIPR = require(contractsHIPRPath + '/deploy.json')
+
+    // configure hipr [
+
+    logView.log(`configure HIPR`)
+
+    var pathHIPRConfig = `${pathHIPR}/WebBuild/public/javascripts/config.js`
+
+    logView.log(`${pathHIPRConfig}`)
+
+    // eval hipr js
+    var hiprConfig = fs.readFileSync(pathHIPRConfig, 'utf8')
+    eval(hiprConfig)
+    hiprConfig = Web3Options
+
+    hiprConfig.env = 'dev' //'production'
+    hiprConfig.dev.eth = network
+    hiprConfig.production.hipr_restful = hiprUrl
+
+    var contracts = hiprConfig.contracts[hiprConfig.dev.eth]
+
+    contracts = configureChain(contracts, contractHERC, contractHIPR, contractsHIPRPath, contractsHERCPath, true)
+
+    hiprConfig.contracts[hiprConfig.dev.eth] = contracts
+
+    fs.writeFileSync(pathHIPRConfig, 'Web3Options = ' + JSON.stringify(hiprConfig, null, 2))
+
+    // configure hipr ]
+    // configure rest [
+
+    logView.log(`configure REST`)
+
+    var pathRestConfig = `${pathRest}/config/default.json`
+
+    logView.log(`${pathRestConfig}`)
+
+    var restConfig = require(pathRestConfig)
+
+
+    restConfig.blockchain.activeChain = ['eth', network]
+    chain = restConfig.blockchain['eth'][network] || {}
+
+    chain.contracts = configureChain(chain.contracts, contractHERC, contractHIPR, contractsHIPRPath, contractsHERCPath, false)
+
+    chain.url = chain.url || ethUrl
+
+    restConfig.blockchain['eth'][network] = chain
+
+    fs.writeFileSync(pathRestConfig, JSON.stringify(restConfig, null, 2))
+
+    // configure rest ]
+    // install files [
+
+    logView.log(`Install ABI`)
+
+    var abiPlayerScore = fs.readFileSync(`${contractsHIPRPath}/PlayerScore.abi.json`, 'utf8')
+    var abiPuzzleManager = fs.readFileSync(`${contractsHIPRPath}/PuzzleManager.abi.json`, 'utf8')
+    fs.writeFileSync(`${pathRest}/contracts/PlayerScore.abi`, abiPlayerScore)
+    fs.writeFileSync(`${pathRest}/contracts/PuzzleManager.abi`, abiPuzzleManager)
+
+    logView.log(`${contractsHIPRPath}/PlayerScore.abi.json -> ${pathRest}/contracts/PlayerScore.abi`)
+    logView.log(`${contractsHIPRPath}/PuzzleManager.abi.json -> ${pathRest}/contracts/PuzzleManager.abi`)
+
+    // install files]
+
+    logView.log('done!');
+}
+
+
+
+function configureChain(contracts, contractHERC, contractHIPR, contractsHIPRPath, contractsHERCPath, isHIPR) {
+    contracts = contracts || {}
+    contracts["PlayerScore"] = contracts["PlayerScore"] || {}
+    contracts["PuzzleManager"] = contracts["PuzzleManager"] || {}
+    contracts["HERCToken"] = contracts["HERCToken"] || {}
+
+    contracts.PlayerScore.options = contracts.PlayerScore.options || {}
+    contracts.PuzzleManager.options = contracts.PuzzleManager.options || {}
+    contracts.HERCToken.options = contracts.HERCToken.options || {}
+
+    //        contracts.PlayerScore.options.from = 
+    //        contracts.PuzzleManager.options.from = 
+    //        contracts.HERCToken.options.from = 
+
+    contracts.PlayerScore.address = contractHIPR.PlayerScore.address
+    contracts.PlayerScore.abiPath = `${contractsHIPRPath}/PlayerScore.abi.json`
+    contracts.PlayerScore.validation = require(`${contractsHIPRPath}/PlayerScore.meta.json`)
+
+    contracts.PuzzleManager.address = contractHIPR.PuzzleManager.address
+    contracts.PuzzleManager.abiPath = `${contractsHIPRPath}/PuzzleManager.abi.json`
+    contracts.PuzzleManager.validation = require(`${contractsHIPRPath}/PuzzleManager.meta.json`)
+
+    if (contractHERC.HERCToken && contractHERC.HERCToken.address) {
+        contracts.HERCToken.address = contractHERC.HERCToken.address
+        contracts.HERCToken.abiPath = `${contractsHERCPath}/HERCToken.abi.json`
+        contracts.HERCToken.validation = require(`${contractsHERCPath}/HERCToken.meta.json`)
+    }
+    else {
+        logView.error(`HERCToken not deployed`)
+        contracts.HERCToken.address = ''
+        contracts.HERCToken.abiPath = ''
+        contracts.HERCToken.validation = {}
+    }
+
+    if (isHIPR) {
+        contracts.PlayerScore.abi = require(contracts.PlayerScore.abiPath)
+        contracts.PuzzleManager.abi = require(contracts.PuzzleManager.abiPath)
+        contracts.HERCToken.abi = require(contracts.HERCToken.abiPath)
+        contracts.PlayerScore.abiPath = ''
+        contracts.PuzzleManager.abiPath = ''
+        contracts.HERCToken.abiPath = ''
+        contracts.PlayerScore.validation.sourcePath = ''
+        contracts.PuzzleManager.validation.sourcePath = ''
+        contracts.HERCToken.validation.sourcePath = ''
+    }
+
+    return contracts
+}
 
 /*
 new Promise(async (resolve, reject)=>{

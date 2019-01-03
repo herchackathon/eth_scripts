@@ -34,9 +34,10 @@ class MainMenu extends View {
             },
             selectedBg: 'green',
             items: [
-                `(*) ${showHIPRinfo}`,
-                `(*) ${simulateHIPRscores}`,
-                `(*) ${airdropHIPRtowinners}`,
+                `Configure HIPR & hipr-restful`,
+                `${showHIPRinfo}`,
+                `${simulateHIPRscores}`,
+                `${airdropHIPRtowinners}`,
                 "Deploy contracts",
                 "Run ganache",
                 "Deploy: build local container",
@@ -79,6 +80,9 @@ class MainMenu extends View {
             
             else if (s == showHIPRinfo)
                 self.emit('ui', 'hipr', 'info')
+
+            else if (s == 'Configure HIPR & hipr-restful')
+                self.emit('ui', 'hipr', 'configure')
             
             else if (s == 'View config')
                 self.emit('ui', 'Config', 'show')
