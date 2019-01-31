@@ -7,7 +7,8 @@ const fs = require('fs'),
     contrib = require('blessed-contrib'),
     defaultConfig = require('./default-config.js'),
     path = require('path'),
-    keccak256 = require('js-sha3').keccak256
+    keccak256 = require('js-sha3').keccak256,
+    _ = require('lodash')
 
 var util = require('./lib/util')
 
@@ -260,6 +261,11 @@ function dispatcher(type, action, obj, param) {
 
             simulateScores()
         }
+        if (action == 'mint') {
+            logView.log('hipr mint')
+
+            mintTokens(hiprPayoutoptions)
+        }
         if (action == 'info') {
             logView.log('hipr info')
 
@@ -270,6 +276,12 @@ function dispatcher(type, action, obj, param) {
 
             confiugreHIPR()
         }
+        if (action == 'payout') {
+            logView.log(`hipr payout ${obj}`)
+
+            hiprPayout(obj)
+        }
+        
     }
 
     screen.render();
@@ -631,9 +643,18 @@ function airdrop() {
 //"./node_modules/.bin/ganache-cli -m 'dust fevercissors aware frown minor start ladder lobster success hundred clerk' -a 50"
 
 async function simulateScores() {
+    logView.log('Simulate scores')
+
+//    await mintTokens(options);
+//    return;
+
+//    logView.log('init blockchain')
+
     var blockchain = lazyInitBlockchain(options)
     if (!blockchain)
         return
+
+//    logView.log('init web3')
 
     const ganache = require("ganache-cli");
     const Web3 = require('web3')
@@ -642,12 +663,14 @@ async function simulateScores() {
 
     //web3.setProvider(ganache.provider());
 
-
+//    logView.log('init bweb3')
 
     //var accs = web3.personal_listAccounts()
 //    var accs = web3.eth.accounts
 //    var accs = await web3.eth.personal.getAccounts()
     var bweb3 = blockchain.eth.defaultWeb3()
+
+    logView.log('get accounts')
 
     var accs = await bweb3.eth.personal.getAccounts()
 
@@ -670,6 +693,8 @@ async function simulateScores() {
     for (var i = defScores.length; i < 50; i++)
         defScores.push(i)
 
+    logView.log('wipe scores')
+
     await blockchain.wipeScores()
 
     configurePayout()
@@ -677,10 +702,20 @@ async function simulateScores() {
     logView.log({'initial top scores': defScores.join(', ')})
     
     for (var i = 0; i < defScores.length; i++) {
-        bweb3.eth.defaultAccount = accs[i]
-        blockchain.eth.options.contracts.PlayerScore.options.from = bweb3.eth.defaultAccount
 
-        await blockchain.setScore(defScores[i])
+//        const timeout = ms => new Promise(res => setTimeout(res, ms))
+
+        var addrWinner = accs[i]
+        var score = defScores[i]
+
+        logView.log(`SET_SCORE<${i}> ${addrWinner} ${score}`)
+
+//        await timeout(200)
+
+        bweb3.eth.defaultAccount = addrWinner
+        blockchain.eth.options.contracts.PlayerScore.options.from = addrWinner
+
+        await blockchain.setScore(score)
     }
 
     bweb3.eth.defaultAccount = accs[0]
@@ -697,6 +732,173 @@ async function simulateScores() {
 }
 
 // SIMULATE SCORES ]
+
+// MINT TOKENS [
+
+async function mintTokens(options) {
+    var value = 1000000
+
+    logView.log(`Mint HERCS ${value}`)
+
+    var blockchain = lazyInitBlockchain(options)
+    if (!blockchain)
+        return
+    var web3 = blockchain.eth.defaultWeb3()
+/*
+    const ganache = require("ganache-cli");
+    const Web3 = require('web3')
+
+    var web3 = new Web3(ganache.provider())
+*/
+    var network = 'ganache'
+
+    var contractPath = `${__dirname}/contracts-deploy/${network}/herc/lastest-deployed/`
+    var abiPath = `${contractPath}/HERCToken.abi.json`
+    var deployPath = `${contractPath}/deploy.json`
+
+    var abi = JSON.parse(fs.readFileSync(abiPath))
+    var deploy = JSON.parse(fs.readFileSync(deployPath))
+
+    var accs = await web3.eth.personal.getAccounts()
+    var address = accs[0]
+
+    var options = {
+        address: deploy.HERCToken.address,
+        options: {
+            from: address
+        }
+    }
+
+    logView.log(`HERCToken ${options.address}`)
+    logView.log(`from addr ${options.options.from}`)
+
+    let contract = new web3.eth.Contract(abi, options.address, options.options)
+
+    var m = contract.methods
+
+    var gas = await m.totalSupply().estimateGas({})
+    logView.log(`A totalSupply ${gas} gas`)
+
+    var totalSupply = await m.totalSupply().call({gas})
+    logView.log(`B totalSupply ${totalSupply}`)
+
+    gas = await m.balanceOf(address).estimateGas({})
+    logView.log(`C balanceOf ${address} ${gas} gas`)
+
+    var balance = await m.balanceOf(address).call({gas})
+    logView.log(`D balanceOf ${address} ${balance}`)
+
+/*    gas = await m.mint(address, value).estimateGas({})
+    logView.log(`E mint ${address} ${value} ${gas} gas`)
+    
+    var mint = await m.mint(address, value).send({gas})
+    logView.log(`F mint ${mint}`)
+*/
+    var value1 = 1*1000000000000000
+    var addr1 = '0xafF38D6F43913498F0E7b834a2318ac7F969E9dA'
+    var addr1s = `${addr1} (fixed)`
+    gas = await m.transfer(addr1, value1).estimateGas({})
+    logView.log(`X1 transfer ${addr1s} ${value1} ${gas} gas`)
+    
+    var t1 = await m.transfer(addr1, value1).send({gas})
+    logView.log(`X2 transfer ${t1}`)
+
+
+    gas = await m.balanceOf(addr1).estimateGas({})
+    logView.log(`B1 balanceOf ${addr1s} ${gas} gas`)
+
+    balance = await m.balanceOf(addr1).call({gas})
+    logView.log(`B1 balanceOf ${addr1s} ${balance}`)
+}
+    
+// MINT TOKENS ]
+
+// HIPR PAYOUT [
+
+var PayoutView = require('./ui/views/PayoutView')
+var payoutView
+
+var optionsHipr
+
+async function hiprPayout(mode, param) {
+    logView.log('HIPR payout to winners')
+
+    var blockchain = lazyInitBlockchain(options)
+    if (!blockchain)
+        return
+    var web3 = blockchain.eth.defaultWeb3()
+
+    if (mode == 'init') {
+
+        var startDate = new Date('2019-01-01')
+        var releaseDate = new Date('2019-01-31')
+        var seasonInterval = releaseDate.getTime() - startDate.getTime()
+
+        var season = {
+            startDate,
+            releaseDate,
+            seasonInterval
+        }
+
+        var eth = blockchain.eth
+        var playerScore = eth.options.contracts['PlayerScore']
+        var puzzleManager = eth.options.contracts['PuzzleManager']
+
+        var o = {
+            season,
+            web3: {
+                url: eth.options.url,
+                network: eth.options.network,
+                PlayerScore: {
+                    address: playerScore.address,
+                    updatedAt: playerScore.validation.updatedAt
+                },
+                PuzzleManager: {
+                    address: puzzleManager.address,
+                    updatedAt: puzzleManager.validation.updatedAt
+                }
+            }
+        }
+
+        optionsHipr = o
+
+        var payoutView = new PayoutView(screen, o)
+        payoutView.on('ui', dispatcher)
+    }
+    else if (mode == 'setup-blockchain') {
+
+        var season = {
+            startDate: optionsHipr.season.startDate.getTime(),
+            releaseDate: optionsHipr.season.startDate.getTime(),
+            seasonInterval: optionsHipr.season.seasonInterval
+        }
+
+        await blockchain.payoutSetSeason(season)
+    }
+    else if (mode == 'manual') {
+        var res = await blockchain.getTopScoresCount()
+
+        var scores = await blockchain.getTopScores(0, res.topScoresCount)
+    
+        logView.log('TopScores:')
+        var arr = scores.topScores
+        for (var i = 0; i < arr.length; i++) {
+            var o = arr[i]
+            logView.log(`  ${o.player} ${o.score}`)
+    //            console.log(`${o.player} ${o.score}`)
+        }
+    
+    
+    }
+    else if (mode == 'auto') {
+
+    }
+    else if (mode == 'force') {
+
+    }
+}
+
+// HIPR PAYOUT ]
 
 // CONFIGURE: PAYOUT [
 
@@ -784,7 +986,7 @@ function confiugreHIPR(options_) {
     logView.log(`HIPR ${pathHIPR}`)
     logView.log(`REST ${pathRest}`)
 
-    logView.log(`load contract ${network} for ${ethUrl}`)
+    logView.log(`Load contract (${network}) ${ethUrl}`)
 
     var contractsHERCPath = `${__dirname}/contracts-deploy/${network}/herc/lastest-deployed`
     var contractsHIPRPath = `${__dirname}/contracts-deploy/${network}/hipr/lastest-deployed`
@@ -794,33 +996,79 @@ function confiugreHIPR(options_) {
 
     // configure hipr [
 
-    logView.log(`configure HIPR`)
+    logView.log(`Configure HIPR (${network})`)
 
     var pathHIPRConfig = `${pathHIPR}/WebBuild/public/javascripts/config.js`
+    var pathHIPRConfigContracts = `${pathHIPR}/WebBuild/public/javascripts/config-contracts.js`
 
     logView.log(`${pathHIPRConfig}`)
+    logView.log(`${pathHIPRConfigContracts}`)
 
     // eval hipr js
-    var hiprConfig = fs.readFileSync(pathHIPRConfig, 'utf8')
-    eval(hiprConfig)
+    try {
+        var hiprConfig = fs.readFileSync(pathHIPRConfig, 'utf8')
+        eval(hiprConfig)
+        // updated Web3Options
+    }
+    catch (e) {
+        logView.error(`Can't load config-contracts ${pathHIPRConfig}`)
+    }
+
+    // eval hipr-contracts js
+    try {
+        var hiprConfigContractsCode = fs.readFileSync(pathHIPRConfigContracts, 'utf8')
+        eval(hiprConfigContractsCode)
+        // updated Web3Options
+    }
+    catch (e) {
+        logView.error(`Can't load config-contracts ${pathHIPRConfigContracts}`)
+    }
+
     hiprConfig = Web3Options
 
     hiprConfig.env = 'dev' //'production'
-    hiprConfig.dev.eth = network
+    hiprConfig.dev.eth = 'ropsten' //network
     hiprConfig.production.hipr_restful = hiprUrl
 
     var contracts = hiprConfig.contracts[hiprConfig.dev.eth]
 
     contracts = configureChain(contracts, contractHERC, contractHIPR, contractsHIPRPath, contractsHERCPath, true)
 
+    // split to config and config-abi [
+
+    var hiprConfigContracts = {}
+
     hiprConfig.contracts[hiprConfig.dev.eth] = contracts
 
+    _.mapKeys(hiprConfig.contracts, (network, netname) => {
+        _.mapKeys(network, (contract, name) => {
+            hiprConfigContracts[netname] = hiprConfigContracts[netname] || {}
+            hiprConfigContracts[netname][name] = {abi: contract.abi}
+            delete contract['abi']
+            delete contract['abiPath']
+        })
+    })
+
+    // split to config and config-abi ]
+
+    // write config.js
     fs.writeFileSync(pathHIPRConfig, 'Web3Options = ' + JSON.stringify(hiprConfig, null, 2))
+
+    // write config-contracts.js
+    var sw = ''
+    _.mapKeys(hiprConfigContracts, (network, netname) => {
+        _.mapKeys(network, (contract, name) => {
+            _.mapKeys(contract, (prop, propname) => {
+                sw += `Web3Options.contracts["${netname}"]["${name}"]["${propname}"] = ${JSON.stringify(prop)}\n`
+            })
+        })
+    })
+    fs.writeFileSync(pathHIPRConfigContracts, sw);
 
     // configure hipr ]
     // configure rest [
 
-    logView.log(`configure REST`)
+    logView.log(`Configure REST (${network})`)
 
     var pathRestConfig = `${pathRest}/config/default.json`
 

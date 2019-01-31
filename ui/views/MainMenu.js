@@ -34,9 +34,11 @@ class MainMenu extends View {
             },
             selectedBg: 'green',
             items: [
+                `Season 1: Payout to winners`,
+                `HIPR mint tokens`,
+                `${simulateHIPRscores}`,
                 `Configure HIPR & hipr-restful`,
                 `${showHIPRinfo}`,
-                `${simulateHIPRscores}`,
                 `${airdropHIPRtowinners}`,
                 "Deploy contracts",
                 "Run ganache",
@@ -83,6 +85,12 @@ class MainMenu extends View {
 
             else if (s == 'Configure HIPR & hipr-restful')
                 self.emit('ui', 'hipr', 'configure')
+
+            else if (s == 'Season 1: Payout to winners')
+                self.emit('ui', 'hipr', 'payout', 'init')
+
+            else if (s == 'HIPR mint tokens')
+                self.emit('ui', 'hipr', 'mint')
             
             else if (s == 'View config')
                 self.emit('ui', 'Config', 'show')
