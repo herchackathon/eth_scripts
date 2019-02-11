@@ -721,10 +721,11 @@ async function simulateScores() {
     bweb3.eth.defaultAccount = accs[0]
     blockchain.eth.options.contracts.PlayerScore.options.from = bweb3.eth.defaultAccount
 
+    var seasonInterval = 14 * 24*60 * 60*1000 // 2 weeks
     var season = {
         startDate: new Date().getTime(),
-        releaseDate: new Date().getTime(),
-        seasonInterval: 1000,
+        releaseDate: (new Date().getTime()) + seasonInterval,
+        seasonInterval,
     }
     await blockchain.payoutSetSeason(season)
 
@@ -983,8 +984,8 @@ function confiugreHIPR(options_) {
     var pathRest = `${__dirname}/../restful-hipr`
 
     
-    logView.log(`HIPR ${pathHIPR}`)
-    logView.log(`REST ${pathRest}`)
+    logView.log(`{#efee00-fg}HIPR{/} {#008ef0-fg}${pathHIPR}{/}`)
+    logView.log(`{#efee00-fg}REST{/} {#008ef0-fg}${pathRest}{/}`)
 
     logView.log(`Load contract (${network}) ${ethUrl}`)
 
@@ -1001,8 +1002,8 @@ function confiugreHIPR(options_) {
     var pathHIPRConfig = `${pathHIPR}/WebBuild/public/javascripts/config.js`
     var pathHIPRConfigContracts = `${pathHIPR}/WebBuild/public/javascripts/config-contracts.js`
 
-    logView.log(`${pathHIPRConfig}`)
-    logView.log(`${pathHIPRConfigContracts}`)
+//    logView.log(`${pathHIPRConfig}`)
+//    logView.log(`${pathHIPRConfigContracts}`)
 
     // eval hipr js
     try {
@@ -1026,11 +1027,13 @@ function confiugreHIPR(options_) {
 
     hiprConfig = Web3Options
 
-    hiprConfig.env = 'dev' //'production'
-    hiprConfig.dev.eth = 'ropsten' //network
+//    hiprConfig.env = 'dev' //'production'
+//    hiprConfig.dev.eth = 'ropsten' //network
+
     hiprConfig.production.hipr_restful = hiprUrl
 
-    var contracts = hiprConfig.contracts[hiprConfig.dev.eth]
+//    var contracts = hiprConfig.contracts[hiprConfig.dev.eth]
+    var contracts = hiprConfig.contracts[network]
 
     contracts = configureChain(contracts, contractHERC, contractHIPR, contractsHIPRPath, contractsHERCPath, true)
 
@@ -1038,7 +1041,8 @@ function confiugreHIPR(options_) {
 
     var hiprConfigContracts = {}
 
-    hiprConfig.contracts[hiprConfig.dev.eth] = contracts
+//    hiprConfig.contracts[hiprConfig.dev.eth] = contracts
+    hiprConfig.contracts[network] = contracts
 
     _.mapKeys(hiprConfig.contracts, (network, netname) => {
         _.mapKeys(network, (contract, name) => {
@@ -1050,6 +1054,8 @@ function confiugreHIPR(options_) {
     })
 
     // split to config and config-abi ]
+
+    logView.log(`{#efee00-fg}write{/} {#ef8e00-fg}${pathHIPRConfig}{/}`)
 
     // write config.js
     fs.writeFileSync(pathHIPRConfig, 'Web3Options = ' + JSON.stringify(hiprConfig, null, 2))
@@ -1063,6 +1069,9 @@ function confiugreHIPR(options_) {
             })
         })
     })
+
+    logView.log(`{#efee00-fg}write{/} {#ef8e00-fg}${pathHIPRConfigContracts}{/}`)
+
     fs.writeFileSync(pathHIPRConfigContracts, sw);
 
     // configure hipr ]
@@ -1072,7 +1081,7 @@ function confiugreHIPR(options_) {
 
     var pathRestConfig = `${pathRest}/config/default.json`
 
-    logView.log(`${pathRestConfig}`)
+//    logView.log(`${pathRestConfig}`)
 
     var restConfig = require(pathRestConfig)
 
@@ -1085,6 +1094,8 @@ function confiugreHIPR(options_) {
     chain.url = chain.url || ethUrl
 
     restConfig.blockchain['eth'][network] = chain
+
+    logView.log(`{#efee00-fg}write{/} {#ef8e00-fg}${pathRestConfig}{/}`)
 
     fs.writeFileSync(pathRestConfig, JSON.stringify(restConfig, null, 2))
 

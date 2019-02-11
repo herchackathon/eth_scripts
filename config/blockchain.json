@@ -34,7 +34,7 @@
                 }
             },
             "infura-ropsten": {
-                "url": "https://ropsten.infura.io/CHs7q12LsOAlHu4D3Kvr",
+                "url": "https://eth-ropsten.alchemyapi.io/jsonrpc/DCuuSowPM6WbBCkzVfyl8VRYEIjNh9L8",
                 "network": "ropsten",
                 "contracts": {
                     "PuzzleManager": {
