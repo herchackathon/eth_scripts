@@ -1,0 +1,25 @@
+{
+  "contractName": "PlayerScore",
+  "sourcePath": "/home/vv/src/herc2/blockchain/contracts-dev/assetVerification/contracts/PlayerScore.sol",
+  "exportedSymbols": {
+    "PlayerScore": [
+      577
+    ]
+  },
+  "compiler": {
+    "name": "solc",
+    "version": "0.4.24+commit.e67f0147.Emscripten.clang"
+  },
+  "updatedAt": "2019-02-11T20:36:06.990Z",
+  "validation": {
+    "hash": "004859fd2b37ff324c2b1e168e4d0d56379e77527a6b41f15d63eaa274b169f4",
+    "deployDate": "2019-02-11T20:36:08.082Z",
+    "deployBy": "HERC Team",
+    "abiHash": "ff5a714a2f73b1fc4ebe7780615b879241edb14c586f10ad8c20e9d1246a5b95",
+    "sourceSize": 20179,
+    "sourceLines": 236,
+    "sourceHash": "65bc13ceeceb93a5ca876ca0ef4d3e2261820ba9c2a99595a7ebcdea5d640297",
+    "bytecodeHash": "3dfb8a819fe600963ef4da4a4863e3c0804be2075aa4bf41065d6c47031dd4b1",
+    "buildHash": "5b1c2c603c9376ff51ebad638145501a9fae9b77b1ce64f8ae7053417e99eb1a"
+  }
+}

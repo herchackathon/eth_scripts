@@ -1,0 +1,25 @@
+{
+  "contractName": "PuzzleManager",
+  "sourcePath": "/home/vv/src/herc2/blockchain/contracts-dev/assetVerification/contracts/assetValidation.sol",
+  "exportedSymbols": {
+    "PuzzleManager": [
+      464
+    ]
+  },
+  "compiler": {
+    "name": "solc",
+    "version": "0.4.24+commit.e67f0147.Emscripten.clang"
+  },
+  "updatedAt": "2019-02-11T20:36:06.983Z",
+  "validation": {
+    "hash": "6c51db0d0d81af3add6211f4933371fe22154a28d200cddb1eeff96554341de7",
+    "deployDate": "2019-02-11T20:36:09.071Z",
+    "deployBy": "HERC Team",
+    "abiHash": "adbc4184e514c05b0519c1736e80fa0dfa7cde1a22e399f1bd778be7805634f1",
+    "sourceSize": 7920,
+    "sourceLines": 137,
+    "sourceHash": "eaf972332db6e14fd935bd5ef508058d76dc6bcd0b11e1928f2f6fd915698ee1",
+    "bytecodeHash": "2738f4d1f37479f52003ad3bb53e20240b6d165588ef7c5b443ef14357636324",
+    "buildHash": "2e5d5044a39415c2b1577449e194eb628804c9872091cf98a63fcc4aee4f8aa4"
+  }
+}

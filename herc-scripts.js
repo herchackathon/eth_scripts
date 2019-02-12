@@ -144,6 +144,34 @@ var aboutView
 var Config = require('./ui/views/Config')
 var configView
 
+var accountOwner
+
+new Promise(async (resolve, reject)=>{
+    /*
+        // get account owner 
+        var bweb3 = blockchain.eth.defaultWeb3()
+        var accs = await bweb3.eth.personal.getAccounts()
+        
+        accountOwner = accs[0]
+*/
+    var network = 'ganache'
+    var url = 'http://localhost:7545'
+
+    logView.log(`{#000000-bg}{#00ff88-fg}WEB3: ${network} ${url}{/}{/}`)
+    
+    const Web3 = require('web3')
+
+    var web3 = new Web3(new Web3.providers.HttpProvider(url))
+
+    var accs = await web3.eth.personal.getAccounts()
+    
+    accountOwner = accs[0]
+
+    logView.log(`{#000000-bg}{#00ff88-fg}WEB3: accountOwner = ${accountOwner}{/}{/}`)
+})
+
+
+
 function dispatcher(type, action, obj, param) {
     if (type == 'contracts') {
         if (action == 'deploy') {
@@ -533,14 +561,13 @@ var blockchain
 
 var optionsBlockchain
 
-function lazyInitBlockchain(globalOptions) {
+async function lazyInitBlockchain(globalOptions) {
     if (!blockchain) {
 
         Blockchain = require('./lib/blockchain/blockchain');
 
         blockchain = new Blockchain;
-    }
-
+        
 //        global.blockchain = blockchain
         
         var options = require('./config/blockchain.json')
@@ -580,6 +607,11 @@ function lazyInitBlockchain(globalOptions) {
         // auto configure ]
 
         blockchain.init(optionsBlockchain)
+    }
+    else {
+        // todo: correct cleanup and reload
+        logView.log(`{#ffdd00-bg}{#000000-fg}Blockchain inited! Restart app for reset blockchain if new contracts deployed{/}{/}`)
+    }
     
     return blockchain
 }
@@ -713,15 +745,16 @@ async function simulateScores() {
 //        await timeout(200)
 
         bweb3.eth.defaultAccount = addrWinner
-        blockchain.eth.options.contracts.PlayerScore.options.from = addrWinner
+//        blockchain.eth.options.contracts.PlayerScore.options.from = addrWinner
 
-        await blockchain.setScore(score)
+        await blockchain.setScoreSecure(addrWinner, score)
     }
 
     bweb3.eth.defaultAccount = accs[0]
     blockchain.eth.options.contracts.PlayerScore.options.from = bweb3.eth.defaultAccount
 
-    var seasonInterval = 14 * 24*60 * 60*1000 // 2 weeks
+//    var seasonInterval = (14) * 24*60 * 60*1000 // 2 weeks
+    var seasonInterval = (28) * 24*60 * 60*1000 // 2 weeks
     var season = {
         startDate: new Date().getTime(),
         releaseDate: (new Date().getTime()) + seasonInterval,
@@ -925,7 +958,7 @@ function configurePayout() {
     }
 
     // 11-50 = 10 HERC
-    for (var i = payoutOptions.rewards.length; i < 50; i++)
+    for (var i = payoutOptions.rewards.length; i < 100; i++)
         payoutOptions.rewards.push(10)
 
     blockchain.payoutSetup(payoutOptions)
@@ -940,12 +973,14 @@ async function hiprInfo () {
     if (!blockchain)
         return
 
-    var res = await blockchain.getTopScoresCount()
+    var res = await blockchain.getTopScoresSecureCount()
 
-    var scores = await blockchain.getTopScores(0, res.topScoresCount)
+    var scores = await blockchain.getTopScoresSecure(0, res.topScoresCount)
 
-    logView.log('TopScores:')
     var arr = scores.topScores
+
+    logView.log(`TopScoresSecure: ${arr && arr.length}`)
+
     for (var i = 0; i < arr.length; i++) {
         var o = arr[i]
         logView.log(`  ${o.player} ${o.score}`)
@@ -971,6 +1006,10 @@ async function hiprInfo () {
 // HIPR: INFO ]
 
 function confiugreHIPR(options_) {
+    var blockchain = lazyInitBlockchain(options)
+    if (!blockchain)
+        return
+        
 //    var pathHIPR = options_.path,
 //        defaultNetwork = options.network
 
@@ -1163,6 +1202,10 @@ function configureChain(contracts, contractHERC, contractHIPR, contractsHIPRPath
         contracts.PlayerScore.validation.sourcePath = ''
         contracts.PuzzleManager.validation.sourcePath = ''
         contracts.HERCToken.validation.sourcePath = ''
+    }
+    else {
+        contracts.PlayerScore.options = {from: accountOwner}
+        contracts.PuzzleManager.options = {from: accountOwner}
     }
 
     return contracts
