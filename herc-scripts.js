@@ -146,6 +146,26 @@ var configView
 
 var accountOwner
 
+// STATE [
+
+var HState = require('./herc-state')
+var hstate = new HState
+
+hstate.load()
+var state = hstate.get()
+
+// load default state
+if (!state) {
+//    state;
+}
+
+// STATE
+// CONFIGURATIONS [
+
+var ConfigurationsView = require('./ui/views/ConfigurationsView')
+
+// CONFIGURATIONS ]
+
 new Promise(async (resolve, reject)=>{
     /*
         // get account owner 
@@ -170,7 +190,7 @@ new Promise(async (resolve, reject)=>{
     logView.log(`{#000000-bg}{#00ff88-fg}WEB3: accountOwner = ${accountOwner}{/}{/}`)
 })
 
-
+// DISPATCHER [
 
 function dispatcher(type, action, obj, param) {
     if (type == 'contracts') {
@@ -311,9 +331,21 @@ function dispatcher(type, action, obj, param) {
         }
         
     }
+    else if (type == 'config') {
+        if (action == 'select') {
+            var options = {
+                configurations: state && state.networks
+            }
+            configurationsView = new ConfigurationsView(screen, options)
+            configurationsView.on('ui', dispatcher)
+            configurationsView.focus()
+        }
+    }
 
     screen.render();
 }
+
+// DISPATCHER ]
 
 // HIPR CONTAINER [
 

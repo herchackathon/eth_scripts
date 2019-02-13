@@ -11,6 +11,7 @@ class MainMenu extends View {
         var selectedNetwork = options.selectedNetwork
 
         var network = selectedNetwork.eth
+        var selectConfiguration = `Select configuration (${network})`
         var showHIPRinfo = `Show HIPR info (${network})`
         var simulateHIPRscores = `Simulate HIPR scores (${network})`
         var airdropHIPRtowinners = `Airdrop HIPR to winners (${network})`
@@ -34,6 +35,7 @@ class MainMenu extends View {
             },
             selectedBg: 'green',
             items: [
+                selectConfiguration,
                 `Season 1: Payout to winners`,
                 `HIPR mint tokens`,
                 `${simulateHIPRscores}`,
@@ -53,6 +55,9 @@ class MainMenu extends View {
         });
 
         this.table.on('select', function(node, index){
+            
+            self.index = index
+            
 //            console.log(index)
             var s = node.content
             if (s.indexOf('(') == 0)
@@ -96,6 +101,10 @@ class MainMenu extends View {
                 self.emit('ui', 'Config', 'show')
             else if (s == 'About')
                 self.emit('ui', 'About', 'show')
+
+            else if (s == selectConfiguration)
+                self.emit('ui', 'config', 'select')
+
         })
           
         this.table.append(new blessed.Text({  
