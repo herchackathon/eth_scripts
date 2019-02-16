@@ -177,7 +177,7 @@ new Promise(async (resolve, reject)=>{
     var network = 'ganache'
     var url = 'http://localhost:7545'
 
-    logView.log(`{#000000-bg}{#00ff88-fg}WEB3: ${network} ${url}{/}{/}`)
+//    logView.log(`{#000000-bg}{#00ff88-fg}WEB3: ${network} ${url}{/}{/}`)
     
     const Web3 = require('web3')
 
@@ -187,6 +187,11 @@ new Promise(async (resolve, reject)=>{
     
     accountOwner = accs[0]
 
+    network = 'main'
+    var url = 'https://eth-mainnet.alchemyapi.io/jsonrpc/DCuuSowPM6WbBCkzVfyl8VRYEIjNh9L8'
+    accountOwner = '0xCF2fd0cDC0FB56569Cd571e377d9261335aAc15e'
+
+    logView.log(`{#000000-bg}{#00ff88-fg}WEB3: ${network} ${url}{/}{/}`)
     logView.log(`{#000000-bg}{#00ff88-fg}WEB3: accountOwner = ${accountOwner}{/}{/}`)
 })
 
@@ -322,7 +327,12 @@ function dispatcher(type, action, obj, param) {
         if (action == 'configure') {
             logView.log('hipr configure')
 
-            confiugreHIPR()
+            try {
+                confiugreHIPR()
+            }
+            catch (e) {
+                logView.error(e.message)
+            }
         }
         if (action == 'payout') {
             logView.log(`hipr payout ${obj}`)
@@ -332,6 +342,7 @@ function dispatcher(type, action, obj, param) {
         
     }
     else if (type == 'config') {
+        console.log(type, action)
         if (action == 'select') {
             var options = {
                 configurations: state && state.networks
@@ -339,6 +350,16 @@ function dispatcher(type, action, obj, param) {
             configurationsView = new ConfigurationsView(screen, options)
             configurationsView.on('ui', dispatcher)
             configurationsView.focus()
+        }
+        else if (action == 'select-item') {
+            logView.log(`${type}, ${action}, ${obj}`)
+//            state.networks = state
+
+            logView.log(`network=${JSON.stringify(state.networks[obj, null, 2])}`)
+        }
+        else if (action == 'hide') {
+//            configurationsView.hide()
+            configurationsView.destroy()
         }
     }
 
@@ -593,7 +614,7 @@ var blockchain
 
 var optionsBlockchain
 
-async function lazyInitBlockchain(globalOptions) {
+function lazyInitBlockchain(globalOptions) {
     if (!blockchain) {
 
         Blockchain = require('./lib/blockchain/blockchain');
@@ -817,6 +838,7 @@ async function mintTokens(options) {
     var web3 = new Web3(ganache.provider())
 */
     var network = 'ganache'
+//    var network = 'main'
 
     var contractPath = `${__dirname}/contracts-deploy/${network}/herc/lastest-deployed/`
     var abiPath = `${contractPath}/HERCToken.abi.json`
@@ -1048,7 +1070,8 @@ function confiugreHIPR(options_) {
     var server = 'amazon'
     var hiprUrl = `http://${server}:8086/api/1.0`
 
-    var network = 'ganache'
+//    var network = 'ganache'
+    var network = 'main'
     var ethUrl = 'http://localhost:7545'
 
     var pathHIPR = `${__dirname}/../hipr/HIPR-dev`

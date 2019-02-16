@@ -8,12 +8,14 @@ class Configurations extends View {
 
         var self = this
 
-        var configurations = options.configurations
+        this.screen = screen
+        this.options = options
+        this.configurations = options.configurations
 
         var menu = []
 
-        for (var c in configurations) {
-            menu.push(JSON.stringify(configurations[c]))
+        for (var c in this.configurations) {
+            menu.push(JSON.stringify(this.configurations[c]))
         }
 
         this.table = blessed.list({
@@ -38,11 +40,17 @@ class Configurations extends View {
         });
 
         this.table.on('select', function(node, index){
-            
+            var configuration
+
             self.index = index
 
-            var configurations
-            
+            var conf = self.configurations[index]
+
+
+            self.destroy()
+
+            self.emit('ui', 'config', 'select-item', index)
+
         })
           
         this.table.append(new blessed.Text({  
@@ -52,11 +60,20 @@ class Configurations extends View {
             tags: true,
         }));
           
+        this.bind(['escape'], function(ch, key) {
+            self.emit('ui', 'config', 'hide')
+        })
+
         screen.render()
     }
 
     focus () {
         this.table.focus()
+    }
+
+    destroy () {
+        this.table.destroy()
+        this.screen.render()
     }
 }
 
