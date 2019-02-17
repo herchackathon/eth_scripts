@@ -649,7 +649,7 @@ function lazyInitBlockchain(globalOptions) {
         var contractHERC = require(contractsHERCPath + '/deploy.json')
         var contractHIPR = require(contractsHIPRPath + '/deploy.json')
 
-        chain.contracts = configureChain(chain.contracts, contractHERC, contractHIPR, contractsHIPRPath, contractsHERCPath, false)
+        chain.contracts = configureChain(chain.contracts, contractHERC, contractHIPR, contractsHIPRPath, contractsHERCPath, 'scripts')
 
         optionsBlockchain.___WARNING___ = "WARNING! Don't edit this file, generated automaticly" 
 
@@ -1129,7 +1129,7 @@ function confiugreHIPR(options_) {
 //    var contracts = hiprConfig.contracts[hiprConfig.dev.eth]
     var contracts = hiprConfig.contracts[network]
 
-    contracts = configureChain(contracts, contractHERC, contractHIPR, contractsHIPRPath, contractsHERCPath, true)
+    contracts = configureChain(contracts, contractHERC, contractHIPR, contractsHIPRPath, contractsHERCPath, 'hipr')
 
     // split to config and config-abi [
 
@@ -1183,7 +1183,7 @@ function confiugreHIPR(options_) {
     restConfig.blockchain.activeChain = ['eth', network]
     chain = restConfig.blockchain['eth'][network] || {}
 
-    chain.contracts = configureChain(chain.contracts, contractHERC, contractHIPR, contractsHIPRPath, contractsHERCPath, false)
+    chain.contracts = configureChain(chain.contracts, contractHERC, contractHIPR, contractsHIPRPath, contractsHERCPath, 'rest')
 
     chain.url = chain.url || ethUrl
 
@@ -1200,11 +1200,11 @@ function confiugreHIPR(options_) {
 
     var abiPlayerScore = fs.readFileSync(`${contractsHIPRPath}/PlayerScore.abi.json`, 'utf8')
     var abiPuzzleManager = fs.readFileSync(`${contractsHIPRPath}/PuzzleManager.abi.json`, 'utf8')
-    fs.writeFileSync(`${pathRest}/contracts/PlayerScore.abi`, abiPlayerScore)
-    fs.writeFileSync(`${pathRest}/contracts/PuzzleManager.abi`, abiPuzzleManager)
+    fs.writeFileSync(`${pathRest}/contracts/PlayerScore.abi.json`, abiPlayerScore)
+    fs.writeFileSync(`${pathRest}/contracts/PuzzleManager.abi.json`, abiPuzzleManager)
 
-    logView.log(`${contractsHIPRPath}/PlayerScore.abi.json -> ${pathRest}/contracts/PlayerScore.abi`)
-    logView.log(`${contractsHIPRPath}/PuzzleManager.abi.json -> ${pathRest}/contracts/PuzzleManager.abi`)
+    logView.log(`${contractsHIPRPath}/PlayerScore.abi.json -> ${pathRest}/contracts/PlayerScore.abi.json`)
+    logView.log(`${contractsHIPRPath}/PuzzleManager.abi.json -> ${pathRest}/contracts/PuzzleManager.abi.json`)
 
     // install files]
 
@@ -1213,7 +1213,7 @@ function confiugreHIPR(options_) {
 
 
 
-function configureChain(contracts, contractHERC, contractHIPR, contractsHIPRPath, contractsHERCPath, isHIPR) {
+function configureChain(contracts, contractHERC, contractHIPR, contractsHIPRPath, contractsHERCPath, type) {
     contracts = contracts || {}
     contracts["PlayerScore"] = contracts["PlayerScore"] || {}
     contracts["PuzzleManager"] = contracts["PuzzleManager"] || {}
@@ -1247,7 +1247,7 @@ function configureChain(contracts, contractHERC, contractHIPR, contractsHIPRPath
         contracts.HERCToken.validation = {}
     }
 
-    if (isHIPR) {
+    if (type == 'hipr') {
         contracts.PlayerScore.abi = require(contracts.PlayerScore.abiPath)
         contracts.PuzzleManager.abi = require(contracts.PuzzleManager.abiPath)
         contracts.HERCToken.abi = require(contracts.HERCToken.abiPath)
@@ -1259,8 +1259,20 @@ function configureChain(contracts, contractHERC, contractHIPR, contractsHIPRPath
         contracts.HERCToken.validation.sourcePath = ''
     }
     else {
+        // type == 'rest' || type == 'scripts'
         contracts.PlayerScore.options = {from: accountOwner}
         contracts.PuzzleManager.options = {from: accountOwner}
+
+        var abiPath
+        if (type == 'rest') {
+            abiPath = 'contracts'
+        }
+        else { //type == scripts
+            abiPath = contractsHIPRPath
+        }
+        
+        contracts.PlayerScore.abiPath = `${abiPath}/PlayerScore.abi.json`
+        contracts.PuzzleManager.abiPath = `${abiPath}/PuzzleManager.abi.json`
     }
 
     return contracts

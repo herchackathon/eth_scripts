@@ -18,13 +18,9 @@ echo DOCKER=$DOCKER
 
 #./hipr-setup.sh local $FILES $DEPLOY
 
-№./hipr-setup.sh docker $FILES $DOCKER
+#./hipr-setup.sh docker $FILES $DOCKER
 
-
-REMOTE_DEPLOY=~/hipr-deploy
-
-REMOTE_PEM=~/.ssh/gojodev.pem
-REMOTE_HOST=ubuntu@ec2-18-191-222-136.us-east-2.compute.amazonaws.com
+. config1.sh
 
 echo REMOTE_DEPLOY=$REMOTE_DEPLOY
 
