@@ -35,10 +35,10 @@ class MainMenu extends View {
             },
             selectedBg: 'green',
             items: [
+                `${simulateHIPRscores}`,
                 selectConfiguration,
                 `Season 1: Payout to winners`,
                 `HIPR mint tokens`,
-                `${simulateHIPRscores}`,
                 `Configure HIPR & hipr-restful`,
                 `${showHIPRinfo}`,
                 `${airdropHIPRtowinners}`,

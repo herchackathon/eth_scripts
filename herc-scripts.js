@@ -186,11 +186,11 @@ new Promise(async (resolve, reject)=>{
     var accs = await web3.eth.personal.getAccounts()
     
     accountOwner = accs[0]
-
+/*
     network = 'main'
     var url = 'https://eth-mainnet.alchemyapi.io/jsonrpc/DCuuSowPM6WbBCkzVfyl8VRYEIjNh9L8'
     accountOwner = '0xCF2fd0cDC0FB56569Cd571e377d9261335aAc15e'
-
+*/
     logView.log(`{#000000-bg}{#00ff88-fg}WEB3: ${network} ${url}{/}{/}`)
     logView.log(`{#000000-bg}{#00ff88-fg}WEB3: accountOwner = ${accountOwner}{/}{/}`)
 })
@@ -198,169 +198,175 @@ new Promise(async (resolve, reject)=>{
 // DISPATCHER [
 
 function dispatcher(type, action, obj, param) {
-    if (type == 'contracts') {
-        if (action == 'deploy') {
-            logView.log('contracts deploy')
+    try {
+        if (type == 'contracts') {
+            if (action == 'deploy') {
+                logView.log('contracts deploy')
 
-            deployContractsView = new DeployContracts(screen)
-            deployContractsView.on('ui', dispatcher)
-            deployContractsView.focus()
+                deployContractsView = new DeployContracts(screen)
+                deployContractsView.on('ui', dispatcher)
+                deployContractsView.focus()
+            }
         }
-    }
 
-    if (type == 'run-ganache') {
-        util.startApp(options, 'ganache')
-    }
-
-    else if (type == 'hipr-restful') {
-        if (action == 'run') {
-            logView.log('hipr-restful run')
+        if (type == 'run-ganache') {
+            util.startApp(options, 'ganache')
         }
-    }
 
-    else if (type == 'HERC') {
-        if (action == 'run') {
-            logView.log('HERC run')
+        else if (type == 'hipr-restful') {
+            if (action == 'run') {
+                logView.log('hipr-restful run')
+            }
         }
-    }
 
-    else if (type == 'Config') {
-        if (action == 'show') {
-            logView.log('Config show')
+        else if (type == 'HERC') {
+            if (action == 'run') {
+                logView.log('HERC run')
+            }
+        }
+
+        else if (type == 'Config') {
+            if (action == 'show') {
+                logView.log('Config show')
+                
+                updateConfiguration()
+
+                var scriptConfig = fs.readFileSync(__dirname + '/scripts/herc-local-config.sh')
+
+                configView = new Config(screen, {
+                    config: options, 
+                    scriptConfig: scriptConfig
+                })
+            }
+        }
+        else if (type == 'About') {
+            if (action == 'show') {
+                logView.log('About show')
+                aboutView = new About(screen, {})
+            }
+        }
+
+        else if (type == 'contracts.compile') {
+            logView.log(`${type} ${action}`)
+            if (action == 'ganache' || action == 'ropsten' || action == 'main') {
+                var network = action == 'main' ? 'live' : action
+
+                if (obj.indexOf('hipr') != -1)
+                    runScriptTruffle('hipr', 'compile', network)
+                if (obj.indexOf('herc') != -1)
+                    runScriptTruffle('herc', 'compile', network)
+            }
+        }
+        else if (type == 'contracts.deploy') {
+            logView.log(`${type} ${action}`)
             
-            updateConfiguration()
+            if (action == 'ganache' || action == 'ropsten' || action == 'main') {
+                var network = action == 'main' ? 'live' : action
 
-            var scriptConfig = fs.readFileSync(__dirname + '/scripts/herc-local-config.sh')
+                if (obj.indexOf('hipr') != -1)
+                    runScriptTruffle('hipr', 'deploy', network)
+                if (obj.indexOf('herc') != -1)
+                    runScriptTruffle('herc', 'deploy', network)
+            }
 
-            configView = new Config(screen, {
-                config: options, 
-                scriptConfig: scriptConfig
-            })
-        }
-    }
-    else if (type == 'About') {
-        if (action == 'show') {
-            logView.log('About show')
-            aboutView = new About(screen, {})
-        }
-    }
-
-    else if (type == 'contracts.compile') {
-        logView.log(`${type} ${action}`)
-        if (action == 'ganache' || action == 'ropsten' || action == 'main') {
-            var network = action == 'main' ? 'live' : action
-
-            if (obj.indexOf('hipr') != -1)
-                runScriptTruffle('hipr', 'compile', network)
-            if (obj.indexOf('herc') != -1)
-                runScriptTruffle('herc', 'compile', network)
-        }
-    }
-    else if (type == 'contracts.deploy') {
-        logView.log(`${type} ${action}`)
-        
-        if (action == 'ganache' || action == 'ropsten' || action == 'main') {
-            var network = action == 'main' ? 'live' : action
-
-            if (obj.indexOf('hipr') != -1)
-                runScriptTruffle('hipr', 'deploy', network)
-            if (obj.indexOf('herc') != -1)
-                runScriptTruffle('herc', 'deploy', network)
+            if (action == 'hide') {
+                if (deployContractsView) {
+                    deployContractsView.destroy()
+                    deployContractsView = null
+                }
+            }
         }
 
-        if (action == 'hide') {
-            if (deployContractsView) {
-                deployContractsView.destroy()
-                deployContractsView = null
+        else if (type == 'deploy') {
+            if (action == 'all.local.container') {
+                logView.log('deloy local')
+
+                var action = 'deploy local container'
+
+                runScriptAction(action)
+            }
+            else if (action == 'all.local.docker') {
+                logView.log('deloy docker')
+
+                var action = 'deploy local docker'
+
+                runScriptAction(action)
+            }
+            else if (action == 'hipr-restful.dev-server') {
+                logView.log('deloy hipr-restful')
+
+                var action = 'deploy remote container'
+
+                runScriptAction(action)
+
+                logView.log('CONTRACTS ARE DEPLOYED, RESET BLOCKCHAIN FOR RECONFIGURE!')
+                blockchain.reset();
+            }
+        }
+
+        else if (type == 'hipr') {
+            if (action == 'airdrop') {
+                logView.log('herc airdrop')
+
+                airdrop()
+            }
+            if (action == 'simulate-scores') {
+                logView.log('hipr simulate-scores')
+
+                simulateScores()
+            }
+            if (action == 'mint') {
+                logView.log('hipr mint')
+
+                mintTokens(hiprPayoutoptions)
+            }
+            if (action == 'info') {
+                logView.log('hipr info')
+
+                hiprInfo()
+            }
+            if (action == 'configure') {
+                logView.log('hipr configure')
+
+                try {
+                    confiugreHIPR()
+                }
+                catch (e) {
+                    logView.error(e.message)
+                }
+            }
+            if (action == 'payout') {
+                logView.log(`hipr payout ${obj}`)
+
+                hiprPayout(obj)
+            }
+            
+        }
+        else if (type == 'config') {
+            console.log(type, action)
+            if (action == 'select') {
+                var optionsConfguration = {
+                    configurations: state && state.networks
+                }
+                configurationsView = new ConfigurationsView(screen, optionsConfguration)
+                configurationsView.on('ui', dispatcher)
+                configurationsView.focus()
+            }
+            else if (action == 'select-item') {
+                logView.log(`${type}, ${action}, ${obj}`)
+    //            state.networks = state
+
+                logView.log(`network=${JSON.stringify(state.networks[obj, null, 2])}`)
+            }
+            else if (action == 'hide') {
+    //            configurationsView.hide()
+                configurationsView.destroy()
             }
         }
     }
-
-    else if (type == 'deploy') {
-        if (action == 'all.local.container') {
-            logView.log('deloy local')
-
-            var action = 'deploy local container'
-
-            runScriptAction(action)
-        }
-        else if (action == 'all.local.docker') {
-            logView.log('deloy docker')
-
-            var action = 'deploy local docker'
-
-            runScriptAction(action)
-        }
-        else if (action == 'hipr-restful.dev-server') {
-            logView.log('deloy hipr-restful')
-
-            var action = 'deploy remote container'
-
-            runScriptAction(action)
-
-            logView.log('CONTRACTS ARE DEPLOYED, RESET BLOCKCHAIN FOR RECONFIGURE!')
-            blockchain.reset();
-        }
-    }
-
-    else if (type == 'hipr') {
-        if (action == 'airdrop') {
-            logView.log('herc airdrop')
-
-            airdrop()
-        }
-        if (action == 'simulate-scores') {
-            logView.log('hipr simulate-scores')
-
-            simulateScores()
-        }
-        if (action == 'mint') {
-            logView.log('hipr mint')
-
-            mintTokens(hiprPayoutoptions)
-        }
-        if (action == 'info') {
-            logView.log('hipr info')
-
-            hiprInfo()
-        }
-        if (action == 'configure') {
-            logView.log('hipr configure')
-
-            try {
-                confiugreHIPR()
-            }
-            catch (e) {
-                logView.error(e.message)
-            }
-        }
-        if (action == 'payout') {
-            logView.log(`hipr payout ${obj}`)
-
-            hiprPayout(obj)
-        }
-        
-    }
-    else if (type == 'config') {
-        console.log(type, action)
-        if (action == 'select') {
-            var options = {
-                configurations: state && state.networks
-            }
-            configurationsView = new ConfigurationsView(screen, options)
-            configurationsView.on('ui', dispatcher)
-            configurationsView.focus()
-        }
-        else if (action == 'select-item') {
-            logView.log(`${type}, ${action}, ${obj}`)
-//            state.networks = state
-
-            logView.log(`network=${JSON.stringify(state.networks[obj, null, 2])}`)
-        }
-        else if (action == 'hide') {
-//            configurationsView.hide()
-            configurationsView.destroy()
-        }
+    catch (e) {
+        console.error(e)
+        console.error('<-- DISPATCHER ERROR')
     }
 
     screen.render();
@@ -755,11 +761,15 @@ async function simulateScores() {
 //    var accs = await web3.eth.personal.getAccounts()
     var bweb3 = blockchain.eth.defaultWeb3()
 
-    logView.log('get accounts')
+//    logView.log('get accounts')
 
-    var accs = await bweb3.eth.personal.getAccounts()
+//    var accs = await bweb3.eth.personal.getAccounts()
 
-    logView.log({'accounts': accs})
+//    logView.log({'accounts': accs})
+
+    var account0 = blockchain.eth.getAddress(0)
+
+    blockchain.eth.options.contracts.PlayerScore.options.from = account0
 
     var defScores = [
         5,
@@ -785,22 +795,51 @@ async function simulateScores() {
     configurePayout()
     
     logView.log({'initial top scores': defScores.join(', ')})
+
     
+//    var s = await 
+//    bweb3.eth.accounts.sign("Hello world", "0x11f4d0A3c12e86B4b5F39B213F7E19D048276DAe", "")
+/*    .then((s, r)=>{
+        console.log(s, r)
+    });*/
+//return
     for (var i = 0; i < defScores.length; i++) {
 
 //        const timeout = ms => new Promise(res => setTimeout(res, ms))
 
-        var addrWinner = accs[i]
+        var addrWinner = blockchain.eth.getAddress(i)
         var score = defScores[i]
 
         logView.log(`SET_SCORE<${i}> ${addrWinner} ${score}`)
 
 //        await timeout(200)
 
-        bweb3.eth.defaultAccount = addrWinner
+//        bweb3.eth.defaultAccount = addrWinner
 //        blockchain.eth.options.contracts.PlayerScore.options.from = addrWinner
 
-        await blockchain.setScoreSecure(addrWinner, score)
+//        await blockchain.setScoreSecure(addrWinner, score)
+
+        var metrics = '0x'
+        try {
+//            await blockchain.setScore(score)
+//            return
+            bweb3.defaultAccount = account0
+
+            var sig = await blockchain.signAddressScore(account0, addrWinner, score, metrics)
+
+            var res = await blockchain.setScoreSecureSign(addrWinner, score, metrics, sig.v, sig.r, sig.s)
+            return
+
+            await blockchain.setScoreSecure(addrWinner, score, metrics, sig)
+
+//        bweb3.eth.defaultAccount = addrWinner
+//        blockchain.eth.options.contracts.PlayerScore.options.from = addrWinner
+
+        }
+        catch (e) {
+            console.error(e)
+        }
+
     }
 
     bweb3.eth.defaultAccount = accs[0]
@@ -1292,3 +1331,6 @@ console.error = (...a) => {
 }
 
 //console.log(1, 2, 3)
+
+mainMenuView.focus()
+

@@ -2,6 +2,7 @@ var blessed = require('blessed')
   , contrib = require('blessed-contrib')
   , View = require('./View')
   , _ = require('lodash')
+  , fs = require('fs')
 
 class LogView extends View {
     constructor (screen, options) {
@@ -44,13 +45,23 @@ class LogView extends View {
         this.screen = screen
 
         this.focus()
+
+        this.logFile = 'console.log'
+    }
+
+    fileFormat (text) {
+        if (typeof text === 'string' || text instanceof String)
+            return text + '\n'
+        return JSON.stringify(text, null, 2) + '\n'
     }
 
     log (text, options) {
+        fs.appendFileSync(this.logFile, this.fileFormat(text))
         this.logger.log(text)
     }
 
     error (text, options) {
+        fs.appendFileSync(this.logFile, '<ERROR>: ' + this.fileFormat(text))
         this.logger.log(`{#d00000-fg}${text}{/}`)
     }
 

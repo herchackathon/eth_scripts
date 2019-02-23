@@ -6,6 +6,7 @@
   "dependencies": {
     "blessed": "^0.1.81",
     "blessed-contrib": "^4.8.8",
+    "dotenv": "^6.2.0",
     "eosjs": "^16.0.9",
     "ganache-cli": "^6.2.5",
     "js-sha3": "^0.8.0",
@@ -15,8 +16,9 @@
     "scanwatch": "^0.1.7",
     "shelljs": "^0.8.3",
     "truffle-flattener": "^1.2.10",
+    "truffle-hdwallet-provider": "^1.0.4",
     "walkdir": "0.0.12",
-    "web3": "^1.0.0-beta.37"
+    "web3": "^1.0.0-beta.46"
   },
   "devDependencies": {},
   "scripts": {

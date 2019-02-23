@@ -11,6 +11,8 @@
         },
         "eth": {
             "local-ganache": {
+                "HDWallet": "MNEMONIC_ganache",
+                "HDWalletSignOnly": true,
                 "url": "http://localhost:7545",
                 "network": "ganache",
                 "contracts": {

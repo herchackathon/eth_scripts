@@ -9,8 +9,10 @@ config = {
     },
     apps: {
         ganache: {
-            url: 'https://github.com/trufflesuite/ganache/releases/download/v1.2.2/ganache-1.2.2-x86_64.AppImage',
-            bin: 'ganache-1.2.2-x86_64.AppImage'
+//            url: 'https://github.com/trufflesuite/ganache/releases/download/v1.2.2/ganache-1.2.2-x86_64.AppImage',
+//            bin: 'ganache-1.2.2-x86_64.AppImage'
+            url: 'https://github.com/trufflesuite/ganache/releases/download/v1.3.0/ganache-1.3.0-x86_64.AppImage',
+            bin: 'ganache-1.3.0-x86_64.AppImage'
         }
     },
     deploy: {
