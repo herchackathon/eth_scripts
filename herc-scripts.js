@@ -792,7 +792,7 @@ async function simulateScores() {
 
     await blockchain.wipeScores()
 
-    configurePayout()
+    await configurePayout()
     
     logView.log({'initial top scores': defScores.join(', ')})
 
@@ -828,7 +828,7 @@ async function simulateScores() {
             var sig = await blockchain.signAddressScore(account0, addrWinner, score, metrics)
 
             var res = await blockchain.setScoreSecureSign(addrWinner, score, metrics, sig.v, sig.r, sig.s)
-            return
+//            return
 
             await blockchain.setScoreSecure(addrWinner, score, metrics, sig)
 
@@ -1029,7 +1029,7 @@ async function hiprPayout(mode, param) {
 
 // CONFIGURE: PAYOUT [
 
-function configurePayout() {
+async function configurePayout() {
     
     var HERCToken = optionsBlockchain.chain.contracts.HERCToken || {address: '0x123456789'}
 
@@ -1054,7 +1054,10 @@ function configurePayout() {
     for (var i = payoutOptions.rewards.length; i < 100; i++)
         payoutOptions.rewards.push(10)
 
-    blockchain.payoutSetup(payoutOptions)
+    logView.log('payout setup')
+    logView.log(JSON.stringify(payoutOptions))
+
+    await blockchain.payoutSetup(payoutOptions)
 }
 
 // CONFIGURE: PAYOUT ]
@@ -1109,8 +1112,8 @@ function confiugreHIPR(options_) {
     var server = 'amazon'
     var hiprUrl = `http://${server}:8086/api/1.0`
 
-//    var network = 'ganache'
-    var network = 'main'
+    var network = 'ganache'
+//    var network = 'main'
     var ethUrl = 'http://localhost:7545'
 
     var pathHIPR = `${__dirname}/../hipr/HIPR-dev`
