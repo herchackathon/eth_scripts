@@ -186,11 +186,11 @@ new Promise(async (resolve, reject)=>{
     var accs = await web3.eth.personal.getAccounts()
     
     accountOwner = accs[0]
-/*
+
     network = 'main'
     var url = 'https://eth-mainnet.alchemyapi.io/jsonrpc/DCuuSowPM6WbBCkzVfyl8VRYEIjNh9L8'
-    accountOwner = '0xCF2fd0cDC0FB56569Cd571e377d9261335aAc15e'
-*/
+    accountOwner = '0x1524CE55603A34c1f4d7E47530f6EFbdAceF3dcD'
+
     logView.log(`{#000000-bg}{#00ff88-fg}WEB3: ${network} ${url}{/}{/}`)
     logView.log(`{#000000-bg}{#00ff88-fg}WEB3: accountOwner = ${accountOwner}{/}{/}`)
 })
@@ -332,7 +332,7 @@ function dispatcher(type, action, obj, param) {
                     confiugreHIPR()
                 }
                 catch (e) {
-                    logView.error(e.message)
+                    logView.error(e)
                 }
             }
             if (action == 'payout') {
@@ -876,8 +876,8 @@ async function mintTokens(options) {
 
     var web3 = new Web3(ganache.provider())
 */
-    var network = 'ganache'
-//    var network = 'main'
+//    var network = 'ganache'
+    var network = 'main'
 
     var contractPath = `${__dirname}/contracts-deploy/${network}/herc/lastest-deployed/`
     var abiPath = `${contractPath}/HERCToken.abi.json`
@@ -1112,8 +1112,8 @@ function confiugreHIPR(options_) {
     var server = 'amazon'
     var hiprUrl = `http://${server}:8086/api/1.0`
 
-    var network = 'ganache'
-//    var network = 'main'
+//    var network = 'ganache'
+    var network = 'main'
     var ethUrl = 'http://localhost:7545'
 
     var pathHIPR = `${__dirname}/../hipr/HIPR-dev`
