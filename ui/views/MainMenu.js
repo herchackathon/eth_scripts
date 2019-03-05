@@ -12,9 +12,14 @@ class MainMenu extends View {
 
         var network = selectedNetwork.eth
         var selectConfiguration = `Select configuration (${network})`
-        var showHIPRinfo = `Show HIPR info (${network})`
-        var simulateHIPRscores = `Simulate HIPR scores (${network})`
         var airdropHIPRtowinners = `Airdrop HIPR to winners (${network})`
+
+        var showInfo = `HIPR: Show info (${network})`
+        var wipeScores = `HIPR: Wipe scores (${network})`
+        var configureSeason = `HIPR: Configure season (${network})`
+        var simulateScores = `HIPR: Simulate scores (${network})`
+
+        var configurePayout = `HIPR: Configure payout (${network})`
 
         this.table = blessed.list({
             parent: screen,
@@ -35,12 +40,17 @@ class MainMenu extends View {
             },
             selectedBg: 'green',
             items: [
-                `${simulateHIPRscores}`,
+                `${showInfo}`,
+                `${wipeScores}`,
+                `${configureSeason}`,
+                `${simulateScores}`,
+
+                `${configurePayout}`,
+
                 selectConfiguration,
                 `Season 1: Payout to winners`,
                 `HIPR mint tokens`,
                 `Configure HIPR & hipr-restful`,
-                `${showHIPRinfo}`,
                 `${airdropHIPRtowinners}`,
                 "Deploy contracts",
                 "Run ganache",
@@ -78,15 +88,25 @@ class MainMenu extends View {
             else if (s == 'Deploy: hipr-restful to dev-server')
                 self.emit('ui', 'deploy', 'hipr-restful.dev-server')
 
-            
-            else if (s == airdropHIPRtowinners)
-                self.emit('ui', 'hipr', 'airdrop')
 
-            else if (s == simulateHIPRscores)
+
+            else if (s == showInfo)
+                self.emit('ui', 'hipr', 'info')
+            else if (s == wipeScores)
+                self.emit('ui', 'hipr', 'wipe-scores')
+            else if (s == configureSeason)
+                self.emit('ui', 'hipr', 'configure-season')
+            else if (s == simulateScores)
                 self.emit('ui', 'hipr', 'simulate-scores')
             
-            else if (s == showHIPRinfo)
-                self.emit('ui', 'hipr', 'info')
+
+
+            else if (s == configurePayout)
+                self.emit('ui', 'hipr', 'configure-payout')
+
+
+            else if (s == airdropHIPRtowinners)
+                self.emit('ui', 'hipr', 'airdrop')
 
             else if (s == 'Configure HIPR & hipr-restful')
                 self.emit('ui', 'hipr', 'configure')

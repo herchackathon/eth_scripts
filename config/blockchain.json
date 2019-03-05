@@ -46,6 +46,8 @@
                 }
             },
             "infura-mainnet": {
+                "HDWallet": "MNEMONIC",
+                "HDWalletSignOnly": false,
                 "url": "https://eth-mainnet.alchemyapi.io/jsonrpc/DCuuSowPM6WbBCkzVfyl8VRYEIjNh9L8",
                 "network": "main",
                 "contracts": {

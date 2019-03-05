@@ -165,6 +165,23 @@ if (!state) {
 var ConfigurationsView = require('./ui/views/ConfigurationsView')
 
 // CONFIGURATIONS ]
+// CTX [
+
+var ctx = {}
+
+//ctx.configure = require('./x/configure')
+ctx.info = require('./x/info')
+ctx.season = require('./x/season')
+ctx.payout = require('./x/payout')
+
+ctx.lazyInitBlockchain = function () {
+    return lazyInitBlockchain(options)
+}
+
+ctx.logView = logView
+
+// CTX ]
+
 
 new Promise(async (resolve, reject)=>{
     /*
@@ -305,25 +322,45 @@ function dispatcher(type, action, obj, param) {
         }
 
         else if (type == 'hipr') {
-            if (action == 'airdrop') {
-                logView.log('herc airdrop')
 
-                airdrop()
+            if (action == 'info') {
+                logView.log('hipr info')
+
+                ctx.info.hiprInfo(ctx, options)
+            }
+            if (action == 'wipe-scores') {
+                logView.log('hipr wipe-scores')
+
+                ctx.season.wipeScores(ctx, options)
+            }
+            if (action == 'configure-season') {
+                logView.log('hipr configure-season')
+
+                ctx.season.configureSeason(ctx, options)
             }
             if (action == 'simulate-scores') {
                 logView.log('hipr simulate-scores')
 
-                simulateScores()
+                ctx.season.simulateScores(ctx, options)
+            }
+
+            
+            if (action == 'configure-payout') {
+                logView.log('hipr configure-payout')
+
+                ctx.payout.configurePayout(ctx, options)
+            }
+            
+
+            if (action == 'airdrop') {
+                logView.log('herc airdrop')
+
+//                airdrop()
             }
             if (action == 'mint') {
                 logView.log('hipr mint')
 
-                mintTokens(hiprPayoutoptions)
-            }
-            if (action == 'info') {
-                logView.log('hipr info')
-
-                hiprInfo()
+                //mintTokens(hiprPayoutoptions)
             }
             if (action == 'configure') {
                 logView.log('hipr configure')
@@ -338,7 +375,7 @@ function dispatcher(type, action, obj, param) {
             if (action == 'payout') {
                 logView.log(`hipr payout ${obj}`)
 
-                hiprPayout(obj)
+//                hiprPayout(obj)
             }
             
         }
@@ -620,6 +657,7 @@ var blockchain
 
 var optionsBlockchain
 
+
 function lazyInitBlockchain(globalOptions) {
     if (!blockchain) {
 
@@ -675,431 +713,6 @@ function lazyInitBlockchain(globalOptions) {
     return blockchain
 }
 
-// AIRDROP [
-
-function airdrop() {
-
-    new Promise(async (resolve, reject)=>{
-        var blockchain = lazyInitBlockchain(options)
-        if (!blockchain)
-            return
-
-        var res = await blockchain.getTopScoresCount()
-
-        var scores = await blockchain.getTopScores(0, res.topScoresCount)
-
-        let activeChain = optionsBlockchain.blockchain.activeChain,
-            network = activeChain[0],
-            name =  activeChain[1]
-        let addr = optionsBlockchain.blockchain[network][name].contracts.PlayerScore.address
-
-        logView.log(`Top PlayerScore contract addresses (at ${addr}):`)
-
-        var arr = scores.topScores
-        for (var i = 0; i < arr.length; i++) {
-            var o = arr[i]
-            logView.log(`${o.player} ${o.score}`)
-//            console.log(`${o.player} ${o.score}`)
-        }
-
-//        logView.log(`Address list is ready in array. Need to export to csv and call airdrop`)
-
-    //    logView.log(JSON.stringify(scores))
-
-        var WEEK = 7*24*60*60
-        let season = {
-            startDate: new Date(),
-            releaseDate: new Date(),
-            seasonInterval: 1*WEEK
-        }
-
-        blockchain.payoutSetSeason(season)
-
-        var over = blockchain.isSeasonOver
-
-        logView.log(`isSeasonOver=${over}`)
-
-        let payoutInfo = await blockchain.payoutInfo()
-
-        logView.log(JSON.stringify(payoutInfo))
-
-        blockchain.payoutToWinners();
-    })
-}
-
-// AIRDROP ]
-// SIMULATE SCORES [
-
-//ganache-cli
-//"./node_modules/.bin/ganache-cli -m 'dust fevercissors aware frown minor start ladder lobster success hundred clerk' -a 50"
-
-async function simulateScores() {
-    logView.log('Simulate scores')
-
-//    await mintTokens(options);
-//    return;
-
-//    logView.log('init blockchain')
-
-    var blockchain = lazyInitBlockchain(options)
-    if (!blockchain)
-        return
-
-//    logView.log('init web3')
-
-    const ganache = require("ganache-cli");
-    const Web3 = require('web3')
-
-    web3 = new Web3(ganache.provider())
-
-    //web3.setProvider(ganache.provider());
-
-//    logView.log('init bweb3')
-
-    //var accs = web3.personal_listAccounts()
-//    var accs = web3.eth.accounts
-//    var accs = await web3.eth.personal.getAccounts()
-    var bweb3 = blockchain.eth.defaultWeb3()
-
-//    logView.log('get accounts')
-
-//    var accs = await bweb3.eth.personal.getAccounts()
-
-//    logView.log({'accounts': accs})
-
-    var account0 = blockchain.eth.getAddress(0)
-
-    blockchain.eth.options.contracts.PlayerScore.options.from = account0
-
-    var defScores = [
-        5,
-        7,
-        1,
-        9,
-        11,
-
-        999,
-        777,
-        100500,
-        1,
-        888
-    ]
-
-    for (var i = defScores.length; i < 50; i++)
-        defScores.push(i)
-
-    logView.log('wipe scores')
-
-    await blockchain.wipeScores()
-
-    await configurePayout()
-    
-    logView.log({'initial top scores': defScores.join(', ')})
-
-    
-//    var s = await 
-//    bweb3.eth.accounts.sign("Hello world", "0x11f4d0A3c12e86B4b5F39B213F7E19D048276DAe", "")
-/*    .then((s, r)=>{
-        console.log(s, r)
-    });*/
-//return
-    for (var i = 0; i < defScores.length; i++) {
-
-//        const timeout = ms => new Promise(res => setTimeout(res, ms))
-
-        var addrWinner = blockchain.eth.getAddress(i)
-        var score = defScores[i]
-
-        logView.log(`SET_SCORE<${i}> ${addrWinner} ${score}`)
-
-//        await timeout(200)
-
-//        bweb3.eth.defaultAccount = addrWinner
-//        blockchain.eth.options.contracts.PlayerScore.options.from = addrWinner
-
-//        await blockchain.setScoreSecure(addrWinner, score)
-
-        var metrics = '0x'
-        try {
-//            await blockchain.setScore(score)
-//            return
-            bweb3.defaultAccount = account0
-
-            var sig = await blockchain.signAddressScore(account0, addrWinner, score, metrics)
-
-            var res = await blockchain.setScoreSecureSign(addrWinner, score, metrics, sig.v, sig.r, sig.s)
-//            return
-
-            await blockchain.setScoreSecure(addrWinner, score, metrics, sig)
-
-//        bweb3.eth.defaultAccount = addrWinner
-//        blockchain.eth.options.contracts.PlayerScore.options.from = addrWinner
-
-        }
-        catch (e) {
-            console.error(e)
-        }
-
-    }
-
-    bweb3.eth.defaultAccount = accs[0]
-    blockchain.eth.options.contracts.PlayerScore.options.from = bweb3.eth.defaultAccount
-
-//    var seasonInterval = (14) * 24*60 * 60*1000 // 2 weeks
-    var seasonInterval = (28) * 24*60 * 60*1000 // 2 weeks
-    var season = {
-        startDate: new Date().getTime(),
-        releaseDate: (new Date().getTime()) + seasonInterval,
-        seasonInterval,
-    }
-    await blockchain.payoutSetSeason(season)
-
-    hiprInfo()
-}
-
-// SIMULATE SCORES ]
-
-// MINT TOKENS [
-
-async function mintTokens(options) {
-    var value = 1000000
-
-    logView.log(`Mint HERCS ${value}`)
-
-    var blockchain = lazyInitBlockchain(options)
-    if (!blockchain)
-        return
-    var web3 = blockchain.eth.defaultWeb3()
-/*
-    const ganache = require("ganache-cli");
-    const Web3 = require('web3')
-
-    var web3 = new Web3(ganache.provider())
-*/
-//    var network = 'ganache'
-    var network = 'main'
-
-    var contractPath = `${__dirname}/contracts-deploy/${network}/herc/lastest-deployed/`
-    var abiPath = `${contractPath}/HERCToken.abi.json`
-    var deployPath = `${contractPath}/deploy.json`
-
-    var abi = JSON.parse(fs.readFileSync(abiPath))
-    var deploy = JSON.parse(fs.readFileSync(deployPath))
-
-    var accs = await web3.eth.personal.getAccounts()
-    var address = accs[0]
-
-    var options = {
-        address: deploy.HERCToken.address,
-        options: {
-            from: address
-        }
-    }
-
-    logView.log(`HERCToken ${options.address}`)
-    logView.log(`from addr ${options.options.from}`)
-
-    let contract = new web3.eth.Contract(abi, options.address, options.options)
-
-    var m = contract.methods
-
-    var gas = await m.totalSupply().estimateGas({})
-    logView.log(`A totalSupply ${gas} gas`)
-
-    var totalSupply = await m.totalSupply().call({gas})
-    logView.log(`B totalSupply ${totalSupply}`)
-
-    gas = await m.balanceOf(address).estimateGas({})
-    logView.log(`C balanceOf ${address} ${gas} gas`)
-
-    var balance = await m.balanceOf(address).call({gas})
-    logView.log(`D balanceOf ${address} ${balance}`)
-
-/*    gas = await m.mint(address, value).estimateGas({})
-    logView.log(`E mint ${address} ${value} ${gas} gas`)
-    
-    var mint = await m.mint(address, value).send({gas})
-    logView.log(`F mint ${mint}`)
-*/
-    var value1 = 1*1000000000000000
-    var addr1 = '0xafF38D6F43913498F0E7b834a2318ac7F969E9dA'
-    var addr1s = `${addr1} (fixed)`
-    gas = await m.transfer(addr1, value1).estimateGas({})
-    logView.log(`X1 transfer ${addr1s} ${value1} ${gas} gas`)
-    
-    var t1 = await m.transfer(addr1, value1).send({gas})
-    logView.log(`X2 transfer ${t1}`)
-
-
-    gas = await m.balanceOf(addr1).estimateGas({})
-    logView.log(`B1 balanceOf ${addr1s} ${gas} gas`)
-
-    balance = await m.balanceOf(addr1).call({gas})
-    logView.log(`B1 balanceOf ${addr1s} ${balance}`)
-}
-    
-// MINT TOKENS ]
-
-// HIPR PAYOUT [
-
-var PayoutView = require('./ui/views/PayoutView')
-var payoutView
-
-var optionsHipr
-
-async function hiprPayout(mode, param) {
-    logView.log('HIPR payout to winners')
-
-    var blockchain = lazyInitBlockchain(options)
-    if (!blockchain)
-        return
-    var web3 = blockchain.eth.defaultWeb3()
-
-    if (mode == 'init') {
-
-        var startDate = new Date('2019-01-01')
-        var releaseDate = new Date('2019-01-31')
-        var seasonInterval = releaseDate.getTime() - startDate.getTime()
-
-        var season = {
-            startDate,
-            releaseDate,
-            seasonInterval
-        }
-
-        var eth = blockchain.eth
-        var playerScore = eth.options.contracts['PlayerScore']
-        var puzzleManager = eth.options.contracts['PuzzleManager']
-
-        var o = {
-            season,
-            web3: {
-                url: eth.options.url,
-                network: eth.options.network,
-                PlayerScore: {
-                    address: playerScore.address,
-                    updatedAt: playerScore.validation.updatedAt
-                },
-                PuzzleManager: {
-                    address: puzzleManager.address,
-                    updatedAt: puzzleManager.validation.updatedAt
-                }
-            }
-        }
-
-        optionsHipr = o
-
-        var payoutView = new PayoutView(screen, o)
-        payoutView.on('ui', dispatcher)
-    }
-    else if (mode == 'setup-blockchain') {
-
-        var season = {
-            startDate: optionsHipr.season.startDate.getTime(),
-            releaseDate: optionsHipr.season.startDate.getTime(),
-            seasonInterval: optionsHipr.season.seasonInterval
-        }
-
-        await blockchain.payoutSetSeason(season)
-    }
-    else if (mode == 'manual') {
-        var res = await blockchain.getTopScoresCount()
-
-        var scores = await blockchain.getTopScores(0, res.topScoresCount)
-    
-        logView.log('TopScores:')
-        var arr = scores.topScores
-        for (var i = 0; i < arr.length; i++) {
-            var o = arr[i]
-            logView.log(`  ${o.player} ${o.score}`)
-    //            console.log(`${o.player} ${o.score}`)
-        }
-    
-    
-    }
-    else if (mode == 'auto') {
-
-    }
-    else if (mode == 'force') {
-
-    }
-}
-
-// HIPR PAYOUT ]
-
-// CONFIGURE: PAYOUT [
-
-async function configurePayout() {
-    
-    var HERCToken = optionsBlockchain.chain.contracts.HERCToken || {address: '0x123456789'}
-
-    let payoutOptions = {
-        hercContract: HERCToken.address,
-        payoutBoss: blockchain.eth.options.contracts.PlayerScore.options.from,
-        rewards: [
-            1000,   // 1st
-            900,    // 2nd
-            800,    // 3rd
-            700,
-            600,
-            500,
-            400,
-            300,
-            200,
-            100,
-        ]
-    }
-
-    // 11-50 = 10 HERC
-    for (var i = payoutOptions.rewards.length; i < 100; i++)
-        payoutOptions.rewards.push(10)
-
-    logView.log('payout setup')
-    logView.log(JSON.stringify(payoutOptions))
-
-    await blockchain.payoutSetup(payoutOptions)
-}
-
-// CONFIGURE: PAYOUT ]
-    
-// HIPR: INFO [
-    
-async function hiprInfo () {
-    var blockchain = lazyInitBlockchain(options)
-    if (!blockchain)
-        return
-
-    var res = await blockchain.getTopScoresSecureCount()
-
-    var scores = await blockchain.getTopScoresSecure(0, res.topScoresCount)
-
-    var arr = scores.topScores
-
-    logView.log(`TopScoresSecure: ${arr && arr.length}`)
-
-    for (var i = 0; i < arr.length; i++) {
-        var o = arr[i]
-        logView.log(`  ${o.player} ${o.score}`)
-//            console.log(`${o.player} ${o.score}`)
-    }
-
-    let payoutInfo = await blockchain.payoutInfo()
-    var s = ''
-    if (payoutInfo.rewards && payoutInfo.rewards.length) {
-        for (var i = 0; i < payoutInfo.rewards.length; i++) {
-            var r = payoutInfo.rewards[i]
-            s += r.rank + '-' + r.reward + ' '
-        }
-        payoutInfo['rewards'] = s
-    }
-    logView.log(JSON.stringify(payoutInfo, null, 2))
-
-    var over = await blockchain.isSeasonOver()
-    logView.log(`isSeasonOver=${over.result}`)
-
-}
-
-// HIPR: INFO ]
 
 function confiugreHIPR(options_) {
     var blockchain = lazyInitBlockchain(options)
@@ -1109,8 +722,8 @@ function confiugreHIPR(options_) {
 //    var pathHIPR = options_.path,
 //        defaultNetwork = options.network
 
-    var server = 'amazon'
-    var hiprUrl = `http://${server}:8086/api/1.0`
+//    var server = 'hipr.one'
+//    var hiprUrl = `http://${server}:8086/api/1.0`
 
 //    var network = 'ganache'
     var network = 'main'
@@ -1166,7 +779,7 @@ function confiugreHIPR(options_) {
 //    hiprConfig.env = 'dev' //'production'
 //    hiprConfig.dev.eth = 'ropsten' //network
 
-    hiprConfig.production.hipr_restful = hiprUrl
+//    hiprConfig.production.hipr_restful = hiprUrl
 
 //    var contracts = hiprConfig.contracts[hiprConfig.dev.eth]
     var contracts = hiprConfig.contracts[network]
