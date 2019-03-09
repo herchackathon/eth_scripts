@@ -46,13 +46,14 @@ class MainMenu extends View {
                 `${simulateScores}`,
 
                 `${configurePayout}`,
+                "Deploy contracts",
+                `Configure HIPR & hipr-restful`,
+                "***",
 
                 selectConfiguration,
                 `Season 1: Payout to winners`,
                 `HIPR mint tokens`,
-                `Configure HIPR & hipr-restful`,
                 `${airdropHIPRtowinners}`,
-                "Deploy contracts",
                 "Run ganache",
                 "Deploy: build local container",
                 "Deploy: build local docker",

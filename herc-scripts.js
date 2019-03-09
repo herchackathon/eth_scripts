@@ -12,6 +12,26 @@ const fs = require('fs'),
 
 var util = require('./lib/util')
 
+// ACTIVE NETWORK [
+
+function getActiveNetwork() {
+    return {
+        network: 'ganache',
+        url: 'http://localhost:7545',
+        backend: 'local-ganache',
+        accountOnwner: null,
+    }
+/*
+    return {
+        network: 'main',
+        url: 'https://eth-mainnet.alchemyapi.io/jsonrpc/DCuuSowPM6WbBCkzVfyl8VRYEIjNh9L8',
+        backend: 'infura-mainnet',
+        accountOwner: '0x1524CE55603A34c1f4d7E47530f6EFbdAceF3dcD'
+    }*/
+}
+
+// ACTIVE NETWORK ]
+    
 var screen = blessed.screen({
     smartCSR: true
 });
@@ -129,6 +149,11 @@ util.init({
 
 var options = defaultConfig
 
+var activeNetwork = getActiveNetwork()
+
+options.selectedNetwork.eth = activeNetwork.network
+options.selectedNetwork.backend = activeNetwork.backend
+
 var MainMenu = require('./ui/views/MainMenu')
 var mainMenuView = new MainMenu(screen, options)
 mainMenuView.focus()
@@ -182,7 +207,6 @@ ctx.logView = logView
 
 // CTX ]
 
-
 new Promise(async (resolve, reject)=>{
     /*
         // get account owner 
@@ -191,22 +215,30 @@ new Promise(async (resolve, reject)=>{
         
         accountOwner = accs[0]
 */
-    var network = 'ganache'
-    var url = 'http://localhost:7545'
-
 //    logView.log(`{#000000-bg}{#00ff88-fg}WEB3: ${network} ${url}{/}{/}`)
+
+    var net = getActiveNetwork()
+//    var network = 'ganache'
+//    var url = 'http://localhost:7545'
     
-    const Web3 = require('web3')
+    var network = net.network
+    var url = net.url
+    accountOwner = net.accountOwner
 
-    var web3 = new Web3(new Web3.providers.HttpProvider(url))
+    if (network == 'ganache') {
+        const Web3 = require('web3')
 
-    var accs = await web3.eth.personal.getAccounts()
-    
-    accountOwner = accs[0]
+        var web3 = new Web3(new Web3.providers.HttpProvider(url))
 
-    network = 'main'
-    var url = 'https://eth-mainnet.alchemyapi.io/jsonrpc/DCuuSowPM6WbBCkzVfyl8VRYEIjNh9L8'
-    accountOwner = '0x1524CE55603A34c1f4d7E47530f6EFbdAceF3dcD'
+        var accs = await web3.eth.personal.getAccounts()
+        
+        accountOwner = accs[0]
+    }
+    else if (network == 'main') {
+/*        network = 'main'
+        var url = 'https://eth-mainnet.alchemyapi.io/jsonrpc/DCuuSowPM6WbBCkzVfyl8VRYEIjNh9L8'
+        accountOwner = '0x1524CE55603A34c1f4d7E47530f6EFbdAceF3dcD'*/
+    }
 
     logView.log(`{#000000-bg}{#00ff88-fg}WEB3: ${network} ${url}{/}{/}`)
     logView.log(`{#000000-bg}{#00ff88-fg}WEB3: accountOwner = ${accountOwner}{/}{/}`)
@@ -671,8 +703,11 @@ function lazyInitBlockchain(globalOptions) {
 
         optionsBlockchain = options
 
+        var net = getActiveNetwork()
+        var backend = net.backend //globalOptions.selectedNetwork.backend
+
         options.blockchain.activeChain[0] = 'eth' // todo: check for eos
-        options.blockchain.activeChain[1] = globalOptions.selectedNetwork.backend
+        options.blockchain.activeChain[1] = backend
 
         // auto configure [
 
@@ -726,8 +761,12 @@ function confiugreHIPR(options_) {
 //    var hiprUrl = `http://${server}:8086/api/1.0`
 
 //    var network = 'ganache'
-    var network = 'main'
-    var ethUrl = 'http://localhost:7545'
+//    var network = 'main'
+//    var ethUrl = 'http://localhost:7545'
+
+    var net = getActiveNetwork()
+    var network = net.network 
+    var ethUrl = net.url
 
     var pathHIPR = `${__dirname}/../hipr/HIPR-dev`
     var pathRest = `${__dirname}/../restful-hipr`
@@ -933,11 +972,6 @@ function configureChain(contracts, contractHERC, contractHIPR, contractsHIPRPath
     return contracts
 }
 
-/*
-new Promise(async (resolve, reject)=>{
-    await simulateScores()
-})*/
-
 console.log = (...a) => {
     logView.log(a)
 }
@@ -946,7 +980,4 @@ console.error = (...a) => {
     logView.error(a)
 }
 
-//console.log(1, 2, 3)
-
 mainMenuView.focus()
-

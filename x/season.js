@@ -1,21 +1,23 @@
 // WIPE SCORES [
 
 async function wipeScores(ctx, options) {
+    var logView = ctx.logView
     var blockchain = ctx.lazyInitBlockchain()
     if (!blockchain)
         return
 
-    console.log('wipe scores...')
+    logView.log('wipe scores...')
 
     await blockchain.wipeScores()
 
-    console.log('wipe scores done')
+    logView.log('wipe scores done')
 }
 
 // WIPE SCORES ]
 // CONFIGURE SEASON [
 
 async function configureSeason(ctx, options) {
+    var logView = ctx.logView
     var blockchain = ctx.lazyInitBlockchain()
     if (!blockchain)
         return
@@ -27,41 +29,39 @@ async function configureSeason(ctx, options) {
         releaseDate: (new Date().getTime()) + seasonInterval,
         seasonInterval,
     }
+    
+    logView.log('Configure season...')
+
     await blockchain.payoutSetSeason(season)
+
+    logView.log('Configure season done!')
 }
 
 // CONFIGURE SEASON ]
 // SIMULATE SCORES [
 
-//ganache-cli
-//"./node_modules/.bin/ganache-cli -m 'dust fevercissors aware frown minor start ladder lobster success hundred clerk' -a 50"
+var startScore = 0
 
-async function simulateScores() {
-    logView.log('Simulate scores')
-
-//    await mintTokens(options);
-//    return;
-
-//    logView.log('init blockchain')
-
-    var blockchain = lazyInitBlockchain()
+async function simulateScores(ctx, options) {
+    var logView = ctx.logView
+    var blockchain = ctx.lazyInitBlockchain()
     if (!blockchain)
         return
 
-//    logView.log('init web3')
+    logView.log('Simulate scores')
 
+/*
     const ganache = require("ganache-cli");
     const Web3 = require('web3')
 
     web3 = new Web3(ganache.provider())
-
+*/
     //web3.setProvider(ganache.provider());
-
-//    logView.log('init bweb3')
 
     //var accs = web3.personal_listAccounts()
 //    var accs = web3.eth.accounts
 //    var accs = await web3.eth.personal.getAccounts()
+
     var bweb3 = blockchain.eth.defaultWeb3()
 
 //    logView.log('get accounts')
@@ -90,6 +90,13 @@ async function simulateScores() {
 
     for (var i = defScores.length; i < 50; i++)
         defScores.push(i)
+
+    if (startScore > 0) {
+        defScores = [];
+        for (var i = defScores.length; i < 10; i++)
+            defScores.push(startScore++)
+    }
+    startScore++;
 
 //    await configurePayout()
     
@@ -122,14 +129,14 @@ async function simulateScores() {
         try {
 //            await blockchain.setScore(score)
 //            return
-            bweb3.defaultAccount = account0
+//            bweb3.defaultAccount = account0
 
             var sig = await blockchain.signAddressScore(account0, addrWinner, score, metrics)
 
             var res = await blockchain.setScoreSecureSign(addrWinner, score, metrics, sig.v, sig.r, sig.s)
 //            return
 
-            await blockchain.setScoreSecure(addrWinner, score, metrics, sig)
+//            await blockchain.setScoreSecure(addrWinner, score, metrics)
 
 //        bweb3.eth.defaultAccount = addrWinner
 //        blockchain.eth.options.contracts.PlayerScore.options.from = addrWinner
@@ -141,8 +148,8 @@ async function simulateScores() {
 
     }
 
-    bweb3.eth.defaultAccount = accs[0]
-    blockchain.eth.options.contracts.PlayerScore.options.from = bweb3.eth.defaultAccount
+//    bweb3.eth.defaultAccount = accs[0]
+//    blockchain.eth.options.contracts.PlayerScore.options.from = bweb3.eth.defaultAccount
 
 //    hiprInfo()
 }
