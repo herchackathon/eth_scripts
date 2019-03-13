@@ -21,6 +21,8 @@ class MainMenu extends View {
 
         var configurePayout = `HIPR: Configure payout (${network})`
 
+        var validate = `Validate`
+
         this.table = blessed.list({
             parent: screen,
             draggable: true,
@@ -29,7 +31,8 @@ class MainMenu extends View {
             keys: true,
             vi: true,
             alwaysScroll: true,
-            width: "50%",
+//            width: "50%",
+            width: "100%",
             height: 12,
             top: 0,
             right: 0,
@@ -40,6 +43,7 @@ class MainMenu extends View {
             },
             selectedBg: 'green',
             items: [
+                `${validate}`,
                 `${showInfo}`,
                 `${wipeScores}`,
                 `${configureSeason}`,
@@ -125,6 +129,10 @@ class MainMenu extends View {
 
             else if (s == selectConfiguration)
                 self.emit('ui', 'config', 'select')
+
+            else if (s == validate) {
+                self.emit('ui', 'hipr', 'validate')
+            }
 
         })
           
