@@ -7,6 +7,10 @@ class QA {
         console.log('validate TODO')
     }
 
+    verifyPaths () {
+        
+    }
+
     verifyEnvFile () {
 
     }

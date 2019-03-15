@@ -15,19 +15,19 @@ var util = require('./lib/util')
 // ACTIVE NETWORK [
 
 function getActiveNetwork() {
-    return {
+/*    return {
         network: 'ganache',
         url: 'http://localhost:7545',
         backend: 'local-ganache',
         accountOnwner: null,
-    }
-/*
+    }*/
+
     return {
         network: 'main',
         url: 'https://eth-mainnet.alchemyapi.io/jsonrpc/DCuuSowPM6WbBCkzVfyl8VRYEIjNh9L8',
         backend: 'infura-mainnet',
         accountOwner: '0x1524CE55603A34c1f4d7E47530f6EFbdAceF3dcD'
-    }*/
+    }
 }
 
 // ACTIVE NETWORK ]
